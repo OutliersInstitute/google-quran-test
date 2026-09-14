@@ -1,0 +1,8 @@
+{
+  "name": "Mobile quran app",
+  "description": "An authentic tablet-focused 15-line Medina Mushaf memorization game with full screen-fit lines and an interactive side challenge carousel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

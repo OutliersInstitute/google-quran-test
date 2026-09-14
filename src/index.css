@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'KFGQPC Uthmanic Script HAFS';
+  src: local('KFGQPC Uthmanic Script HAFS'),
+       local('KFGQPC Uthmanic Script HAFS Regular'),
+       local('UthmanicHafs'),
+       url('https://cdn.jsdelivr.net/gh/nuqayah/qpc-fonts@master/text-mushafs/UthmanicHafs_v20_-font/UthmanicHafs_V20.ttf') format('truetype'),
+       url('https://cdn.jsdelivr.net/gh/nuqayah/qpc-fonts@master/mushaf-v4-hafs/uthmanic_hafs_v22.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --font-quran: 'KFGQPC Uthmanic Script HAFS', 'Amiri Quran', serif;
+    --font-arabic: 'Scheherazade New', 'Amiri', serif;
+    --font-kufi: 'Reem Kufi', sans-serif;
+    --font-display: 'Cinzel', serif;
+    --font-sans: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #f7f4ed;
+    color: #2c251e;
+  }
+}
+
+.font-quran {
+  font-family: var(--font-quran);
+  line-height: 1.4;
+  letter-spacing: normal;
+  word-spacing: normal;
+  font-variant-ligatures: contextual;
+  font-feature-settings: "kern" 1;
+}
+
+.font-arabic {
+  font-family: var(--font-arabic);
+}
+
+.font-kufi {
+  font-family: var(--font-kufi);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Mushaf Page Authentic Parchment Texture & Borders */
+.mushaf-paper {
+  background-color: #fcf9f2;
+  background-image: 
+    radial-gradient(#e6dbc9 0.75px, transparent 0.75px),
+    radial-gradient(#f0e8dc 0.75px, #fcf9f2 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+.mushaf-paper-night {
+  background-color: #171b1e;
+  background-image: 
+    radial-gradient(#252c30 0.75px, transparent 0.75px),
+    radial-gradient(#1f2529 0.75px, #171b1e 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+/* Quranic Ayah End Symbol */
+.ayah-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  vertical-align: middle;
+  font-size: 0.85em;
+  margin: 0 0.25rem;
+  color: #926b1c;
+  user-select: none;
+}
+
+/* Authentic Mushaf 15-Line Strict Grid Rhythm: 15 strictly identical rows distributed evenly */
+.mushaf-15-lines-grid {
+  display: grid;
+  grid-template-rows: repeat(15, minmax(0, 1fr));
+  height: 100%;
+  width: 100%;
+  row-gap: clamp(4px, 0.7vh, 9px);
+}
+
+.mushaf-15-line-slot {
+  height: 100%;
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: visible;
+  line-height: 1.4;
+}
+
+.mushaf-verse-line {
+  width: 100%;
+  font-family: var(--font-quran);
+  line-height: 1.4;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-align: justify;
+  text-align-last: justify;
+  text-justify: auto;
+  overflow: visible;
+}
+
+.mushaf-verse-line.centered {
+  text-align: center;
+  text-align-last: center;
+}
+
+/* Authentic Mushaf Line Typography & Spacing */
+.mushaf-line-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex: 1 1 0%;
+  min-height: 0;
+  line-height: 1.4;
+  font-family: var(--font-quran);
+  letter-spacing: normal;
+  user-select: text;
+}
+
+.mushaf-word {
+  display: inline;
+  white-space: nowrap;
+  letter-spacing: normal;
+}
+
+.mushaf-blank-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  cursor: pointer;
+}
+
+/* Custom elegant scrollbar for Mushaf panels */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(120, 53, 15, 0.05);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(120, 53, 15, 0.25);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 53, 15, 0.45);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Custom scrollbar hiding */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Islamic decorative gold border animation */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 0.6; }
+}
+
+.animate-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
