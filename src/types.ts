@@ -79,6 +79,8 @@ export type DifficultyLevel = 'easy' | 'medium' | 'hafiz';
 
 export type MushafTheme = 'parchment' | 'emerald' | 'midnight' | 'classic-white';
 
+export type PageRenderMode = 'authentic-image' | 'digital-text';
+
 export type PageViewMode = 'single' | 'double';
 
 export interface BlankTarget {

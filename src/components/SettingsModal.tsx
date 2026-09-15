@@ -5,11 +5,14 @@ import {
   Zap, Palette, ShieldAlert, Award, Compass, FileText, Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChallengeType, DifficultyLevel, MushafTheme, PageViewMode, Surah, PageRangeConfig } from '../types';
+import { ChallengeType, DifficultyLevel, MushafTheme, PageViewMode, PageRenderMode, Surah, PageRangeConfig } from '../types';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  // Page Display Mode (Authentic Printed Medina Mushaf vs Digital Text)
+  pageRenderMode: PageRenderMode;
+  onChangePageRenderMode: (mode: PageRenderMode) => void;
   // Challenge Mode & Difficulty
   challengeType: ChallengeType;
   onChangeChallengeType: (type: ChallengeType) => void;
@@ -54,6 +57,8 @@ interface SettingsModalProps {
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
+  pageRenderMode,
+  onChangePageRenderMode,
   challengeType,
   onChangeChallengeType,
   difficulty,
@@ -157,7 +162,58 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
             </div>
 
-            {/* SECTION 1: Testing Mode */}
+            {/* SECTION 1: Page Typography & Display Mode */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-amber-950 dark:text-amber-200 flex items-center gap-1.5 font-display">
+                  <BookOpen className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+                  Mushaf Page Typography
+                </label>
+                <span className="text-[11px] text-stone-500 dark:text-stone-400 font-medium">
+                  {pageRenderMode === 'authentic-image' ? 'Authentic King Fahd Complex' : 'Standard Web Font'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  id="settings-page-mode-authentic-btn"
+                  onClick={() => onChangePageRenderMode('authentic-image')}
+                  className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                    pageRenderMode === 'authentic-image'
+                      ? 'bg-amber-800 text-white border-amber-800 shadow-md ring-2 ring-amber-600/30'
+                      : 'bg-white dark:bg-stone-800/90 text-stone-800 dark:text-stone-200 border-amber-900/15 hover:border-amber-700/40'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs sm:text-sm">Authentic Printed Mushaf</span>
+                    {pageRenderMode === 'authentic-image' && <Check className="w-4 h-4" />}
+                  </div>
+                  <p className={`text-[11px] leading-tight ${pageRenderMode === 'authentic-image' ? 'text-amber-100' : 'text-stone-500 dark:text-stone-400'}`}>
+                    Exact 1:1 King Fahd Medina Mushaf pages. Zero word gaps, perfect calligraphic ligatures, matches printed Quran.
+                  </p>
+                </button>
+
+                <button
+                  id="settings-page-mode-digital-btn"
+                  onClick={() => onChangePageRenderMode('digital-text')}
+                  className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                    pageRenderMode === 'digital-text'
+                      ? 'bg-amber-800 text-white border-amber-800 shadow-md ring-2 ring-amber-600/30'
+                      : 'bg-white dark:bg-stone-800/90 text-stone-800 dark:text-stone-200 border-amber-900/15 hover:border-amber-700/40'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs sm:text-sm">Digital Text Mode</span>
+                    {pageRenderMode === 'digital-text' && <Check className="w-4 h-4" />}
+                  </div>
+                  <p className={`text-[11px] leading-tight ${pageRenderMode === 'digital-text' ? 'text-amber-100' : 'text-stone-500 dark:text-stone-400'}`}>
+                    Vector text with selectable words and customizable font sizes.
+                  </p>
+                </button>
+              </div>
+            </div>
+
+            {/* SECTION 2: Testing Mode */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase tracking-wider text-amber-950 dark:text-amber-200 flex items-center gap-1.5 font-display">

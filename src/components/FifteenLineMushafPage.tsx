@@ -3,7 +3,7 @@ import { Ayah, BlankTarget, MushafTheme, QuranPageData, Surah, PageFifteenLine, 
 import { toArabicDigits } from '../services/quranApi';
 import { Settings } from 'lucide-react';
 import { formatPageIntoFifteenLines } from '../utils/fifteenLineEngine';
-import { applyKashidaToLine, isLineCentered } from '../utils/kashida';
+import { applyKashidaToLine, isLineCentered, stripTajweedMarkers } from '../utils/kashida';
 import { triggerHaptic } from '../utils/haptics';
 
 interface FifteenLineMushafPageProps {
@@ -144,12 +144,12 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
   return (
     <div
       id={`mushaf-15line-page-${pageNumber}`}
-      className={`relative w-full h-full max-h-full flex flex-col justify-between transition-all duration-300 p-1 sm:p-2 md:p-3 ${themeClasses.bg} rounded-xl sm:rounded-2xl overflow-hidden select-text`}
+      className={`relative w-full h-full max-h-full flex flex-col justify-between transition-all duration-300 px-3 sm:px-5 md:px-7 py-2 sm:py-2.5 ${themeClasses.bg} rounded-xl sm:rounded-2xl overflow-hidden select-text`}
     >
       {/* Top Margin Header: Surah Name (Left), Settings Button (Inline), Juz/Hizb (Right) */}
       <div 
         id="page-top-margin" 
-        className={`w-full flex items-center justify-between text-xs sm:text-sm font-semibold pb-1.5 mb-1 sm:mb-1.5 border-b select-none flex-shrink-0 opacity-90 ${themeClasses.headerRule} ${themeClasses.marginText}`}
+        className={`w-full flex items-center justify-between text-xs sm:text-sm font-semibold pb-1.5 mb-1 sm:mb-1.5 border-b select-none flex-shrink-0 opacity-90 px-1 sm:px-2 ${themeClasses.headerRule} ${themeClasses.marginText}`}
       >
         <div className="font-serif font-bold tracking-normal text-xs sm:text-sm flex-1 text-left truncate">
           {headerSurahName}
@@ -184,7 +184,7 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
       {/* Expanded Medina Mushaf 15-Line Canvas - Distributed evenly with vertical row gap */}
       <div 
         id="mushaf-15-lines-grid" 
-        className="w-full flex-1 min-h-0 mushaf-15-lines-grid overflow-hidden my-auto"
+        className="w-full px-0 sm:px-0 mx-auto flex-1 min-h-0 mushaf-15-lines-grid overflow-hidden my-auto"
         style={{
           display: 'grid',
           gridTemplateRows: 'repeat(15, minmax(0, 1fr))',
@@ -201,7 +201,7 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
               <div
                 key={`line_${line.lineNumber}_banner`}
                 id={`mushaf-line-${line.lineNumber}`}
-                className="w-full h-full flex items-center justify-center px-0.5 overflow-hidden"
+                className="w-full h-full flex items-center justify-center px-0 overflow-hidden"
               >
                 <div
                   className={`w-full h-[86%] rounded border border-amber-900/30 dark:border-amber-500/30 flex items-center justify-between px-2.5 sm:px-4 ${themeClasses.surahBannerBg} shadow-2xs my-auto`}
@@ -232,7 +232,7 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
               <div
                 key={`line_${line.lineNumber}_bismillah`}
                 id={`mushaf-line-${line.lineNumber}`}
-                className="w-full h-full flex items-center justify-center px-0.5"
+                className="w-full h-full flex items-center justify-center px-0"
               >
                 <div
                   className={`w-full h-full flex items-center justify-center text-center font-quran text-base sm:text-lg md:text-xl font-bold select-none leading-[1.4] ${themeClasses.bismillahColor}`}
@@ -244,7 +244,7 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
             );
           }
 
-          // 3. Verse Text Line - True justified Arabic text flow with subtle kashida and even line height
+          // 3. Verse Text Line - Natural Arabic word flow without forced edge-to-edge stretching (Option 2)
           const rawItems = line.items || [];
           const isCentered = isLineCentered(rawItems);
           const items = applyKashidaToLine(rawItems, isCentered);
@@ -253,28 +253,27 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
             <div
               key={`line_${line.lineNumber}`}
               id={`mushaf-line-${line.lineNumber}`}
-              className="w-full h-full flex items-center justify-center select-text overflow-visible px-0.5"
+              className="w-full h-full flex items-center justify-center select-text overflow-visible px-0"
               dir="rtl"
             >
               <div
-                className={`w-full font-quran text-[clamp(13px,2.1vh,22px)] sm:text-[clamp(15px,2.3vh,25px)] md:text-[clamp(16px,2.5vh,27px)] leading-[1.4] sm:leading-[1.45] ${themeClasses.verseColor} select-text overflow-visible`}
+                className={`w-full font-quran text-[clamp(14px,2.2vh,22px)] sm:text-[clamp(15px,2.4vh,24px)] md:text-[clamp(16px,2.5vh,26px)] leading-[1.45] ${themeClasses.verseColor} select-text overflow-visible text-center`}
                 style={{
-                  textAlign: isCentered ? 'center' : 'justify',
-                  textAlignLast: isCentered ? 'center' : 'justify',
-                  textJustify: 'auto',
-                  wordSpacing: 'normal',
-                  letterSpacing: 'normal'
+                  textAlign: 'center',
+                  textAlignLast: 'center',
+                  wordSpacing: '0.18em',
+                  letterSpacing: '0px'
                 }}
               >
                 {items.map((item, itemIdx) => {
                   const isLastItem = itemIdx === items.length - 1;
 
-                  // Standard Word - Plain, single ink color throughout, visually compact
+                  // Standard Word - Plain, single ink color throughout, visually compact, tajweed markers and black circle dots stripped
                   if (item.type === 'word') {
                     return (
                       <React.Fragment key={`l${line.lineNumber}_w${itemIdx}`}>
                         <span className="mushaf-word inline select-text">
-                          {item.text}
+                          {stripTajweedMarkers(item.text)}
                         </span>
                         {!isLastItem && ' '}
                       </React.Fragment>
@@ -382,7 +381,7 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
                             }`}>
                               ({slotBlankIndex}) {slotIsCorrect ? '✓' : '✗'}
                             </span>
-                            <span>{item.text}</span>
+                            <span>{stripTajweedMarkers(item.text)}</span>
                           </span>
                           {!isLastItem && ' '}
                         </React.Fragment>

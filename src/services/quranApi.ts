@@ -2,6 +2,7 @@ import { Ayah, QuranPageData, Surah, PageFifteenLine, PageLineItem } from '../ty
 import { BUILT_IN_SURAHS, BUILT_IN_PAGES } from '../data/quranData';
 import { SURAH_METADATA_LIST } from '../data/surahList';
 import { formatPageIntoFifteenLines, getHizbStringForPage } from '../utils/fifteenLineEngine';
+import { stripTajweedMarkers } from '../utils/kashida';
 
 const CACHE_SURAH_PREFIX = 'mushaf_surah_cache_';
 const CACHE_PAGE_PREFIX = 'mushaf_page_cache_';
@@ -38,7 +39,7 @@ export async function fetchSurah(surahNumber: number): Promise<Surah> {
       const audioData = data.data[2];
 
       const ayahs: Ayah[] = uthmaniData.ayahs.map((a: any, idx: number) => {
-        let text = a.text;
+        let text = stripTajweedMarkers(a.text);
         // Clean attached Bismillah from ayah 1 if not Surah Al-Fatihah
         if (surahNumber !== 1 && surahNumber !== 9 && idx === 0) {
           const bismillahPrefix = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
@@ -148,7 +149,7 @@ export async function fetchPage(pageNumber: number): Promise<QuranPageData> {
           const sNum = parseInt(v.verse_key.split(':')[0], 10);
           const aWords = (v.words || []).filter((w: any) => w.char_type_name === 'word');
           const aText = aWords
-            .map((w: any) => (w.text_uthmani || '').replace(/<[^>]+>/g, '').trim())
+            .map((w: any) => stripTajweedMarkers(w.text_uthmani || ''))
             .join(' ');
           const rawTrans = v.translations?.[0]?.text || '';
           const cleanTrans = rawTrans
@@ -183,7 +184,7 @@ export async function fetchPage(pageNumber: number): Promise<QuranPageData> {
             const ln = w.line_number;
             if (ln >= 1 && ln <= 15) {
               if (w.char_type_name === 'word') {
-                const cleanText = (w.text_uthmani || '').replace(/<[^>]+>/g, '').trim();
+                const cleanText = stripTajweedMarkers(w.text_uthmani || '');
                 lineItemsMap.get(ln)!.push({
                   type: 'word',
                   text: cleanText,

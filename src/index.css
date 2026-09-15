@@ -104,12 +104,11 @@
 .mushaf-verse-line {
   width: 100%;
   font-family: var(--font-quran);
-  line-height: 1.4;
+  line-height: 1.45;
   letter-spacing: normal;
-  word-spacing: normal;
-  text-align: justify;
-  text-align-last: justify;
-  text-justify: auto;
+  word-spacing: 0.18em;
+  text-align: center;
+  text-align-last: center;
   overflow: visible;
 }
 

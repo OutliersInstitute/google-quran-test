@@ -1,6 +1,35 @@
 import { PageLineItem } from '../types';
 import { SURAH_METADATA_LIST } from '../data/surahList';
 
+/**
+ * Strips tajweed / waqf marks and special Quranic symbols that render as black circular dots
+ * on mobile/desktop browsers, while strictly preserving core Uthmani letters and standard harakat.
+ *
+ * Specifically removes:
+ * - \u06DF: ARABIC SMALL HIGH ROUNDED ZERO (۟) - renders as black circular dot on silent letters
+ * - \u06E0: ARABIC SMALL HIGH UPRIGHT RECTANGULAR ZERO (۠)
+ * - \u06E2: ARABIC SMALL HIGH MEEM ISOLATED FORM (ۢ) - iqlab symbol
+ * - \u06E3: ARABIC SMALL LOW SEEN (ۣ)
+ * - \u06E4: ARABIC SMALL HIGH MADDA (ۤ)
+ * - \u06E7: ARABIC SMALL HIGH YEH (ۧ)
+ * - \u06E8: ARABIC SMALL HIGH NOON (ۨ)
+ * - \u06EA: ARABIC EMPTY CENTRE LOW STOP (۪)
+ * - \u06EB: ARABIC EMPTY CENTRE HIGH STOP (۫)
+ * - \u06EC: ARABIC ROUNDED HIGH STOP WITH FILLED CENTRE (۬) - solid black dot
+ * - \u06ED: ARABIC SMALL LOW MEEM (ۭ)
+ * - \u06D6-\u06DC: Waqf stop signs (ۖ, ۗ, ۘ, ۙ, ۚ, ۛ, ۜ) that attach to words
+ * - \u0640: Tatweel/kashida (ـ) so words remain tightly joined without elongation gaps
+ */
+export function stripTajweedMarkers(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/<[^>]+>/g, '')
+    .replace(/[\u06D6-\u06DC\u06DF\u06E0\u06E2-\u06E4\u06E7\u06E8\u06EA-\u06ED]/g, '')
+    .replace(/\u0640+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // Arabic combining marks / diacritics
 const DIACRITICS = new Set([
   0x064b, 0x064c, 0x064d, 0x064e, 0x064f, 0x0650, 0x0651, 0x0652, 0x0653,
@@ -109,61 +138,13 @@ export function isLineCentered(items: PageLineItem[] | undefined): boolean {
 }
 
 /**
- * Applies subtle kashida elongation only when strictly needed, keeping words
- * visually compact and naturally dense like in authentic printed Mushafs.
+ * Returns line items without inserting kashida/tatweel characters between letters,
+ * ensuring words stay visually compact, tight, and naturally dense as in authentic printed Mushafs.
  */
-export function applyKashidaToLine(items: PageLineItem[], isCentered: boolean): PageLineItem[] {
-  if (!items || items.length === 0 || isCentered) {
+export function applyKashidaToLine(items: PageLineItem[], _isCentered: boolean): PageLineItem[] {
+  if (!items || items.length === 0) {
     return items;
   }
-
-  const wordItems = items.filter(it => it.type === 'word' || it.type === 'blank-slot');
-  // Lines with 8 or more words are already dense in the Medina layout; keep them completely un-elongated
-  if (wordItems.length >= 8) {
-    return items;
-  }
-
-  // Calculate current raw text length of the line
-  const rawText = items.map(it => it.text || '').join(' ');
-  const targetLength = 78;
-  const deficit = targetLength - rawText.length;
-
-  // If deficit is modest, words shouldn't stretch at all
-  if (deficit <= 14) {
-    return items;
-  }
-
-  // Find candidate words for elongation (only non-blank, long words >= 6 chars)
-  const candidateIndices: number[] = [];
-  items.forEach((item, index) => {
-    if (item.type === 'word' && item.text && item.text.length >= 6) {
-      const slots = findKashidaSlots(item.text);
-      if (slots.length > 0) {
-        candidateIndices.push(index);
-      }
-    }
-  });
-
-  if (candidateIndices.length === 0) {
-    return items;
-  }
-
-  // At most 1 or 2 words in the entire line receive a single subtle elongation
-  const maxKashidas = deficit > 28 ? 2 : 1;
-  const chosenIndices = new Set<number>();
-  for (let i = 0; i < Math.min(candidateIndices.length, maxKashidas); i++) {
-    // Pick from the latter half of candidate words (classical calligraphic preference)
-    const pickIndex = candidateIndices[Math.floor((candidateIndices.length - 1 - i))];
-    chosenIndices.add(pickIndex);
-  }
-
-  return items.map((item, index) => {
-    if (chosenIndices.has(index) && item.type === 'word' && item.text) {
-      return {
-        ...item,
-        text: elongateWord(item.text, 1)
-      };
-    }
-    return item;
-  });
+  // Stop inserting kashida (ـ) between letters to preserve authentic, tight word shapes
+  return items;
 }

@@ -4,11 +4,12 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { BlankTarget, CarouselOption, ChallengeType, DifficultyLevel, GameStats, MushafTheme, QuranPageData, Surah, Ayah, PageRangeConfig, RangeSessionStats, PageViewMode } from './types';
+import { BlankTarget, CarouselOption, ChallengeType, DifficultyLevel, GameStats, MushafTheme, QuranPageData, Surah, Ayah, PageRangeConfig, RangeSessionStats, PageViewMode, PageRenderMode } from './types';
 import { BUILT_IN_SURAHS } from './data/quranData';
 import { fetchPage } from './services/quranApi';
 import { createPageBlankTargets } from './utils/fifteenLineEngine';
 import { FifteenLineMushafPage } from './components/FifteenLineMushafPage';
+import { AuthenticMushafPage } from './components/AuthenticMushafPage';
 import { SideVerseCarousel } from './components/SideVerseCarousel';
 import { MobileBottomCarousel } from './components/MobileBottomCarousel';
 import { SettingsModal } from './components/SettingsModal';
@@ -27,6 +28,7 @@ const BLANK_COUNT_STORAGE_KEY = 'mushaf_blank_count_pref_v1';
 const AUTO_ADVANCE_STORAGE_KEY = 'mushaf_auto_advance_v1';
 const AUTO_PLAY_AUDIO_STORAGE_KEY = 'mushaf_auto_play_audio_v1';
 const PAGE_VIEW_MODE_STORAGE_KEY = 'mushaf_page_view_mode_v1';
+const PAGE_RENDER_MODE_STORAGE_KEY = 'mushaf_page_render_mode_v1';
 
 // Helper to determine facing spread page numbers in Medina Mushaf
 export function getSpreadPageNumbers(pageNum: number, mode: PageViewMode): { rightPage: number; leftPage: number | null } {
@@ -48,6 +50,26 @@ export default function App() {
   // Theme state
   const [theme, setTheme] = useState<MushafTheme>('parchment');
   const [showTranslation, setShowTranslation] = useState<boolean>(false);
+
+  // Page Render Mode (Authentic Printed Medina Mushaf Page Image vs Digital Text)
+  const [pageRenderMode, setPageRenderMode] = useState<PageRenderMode>(() => {
+    try {
+      const saved = localStorage.getItem(PAGE_RENDER_MODE_STORAGE_KEY);
+      if (saved === 'authentic-image' || saved === 'digital-text') return saved;
+    } catch {
+      // fallback
+    }
+    return 'digital-text'; // Digital text mode with full inline blanks on lines
+  });
+
+  const handleChangePageRenderMode = (mode: PageRenderMode) => {
+    setPageRenderMode(mode);
+    try {
+      localStorage.setItem(PAGE_RENDER_MODE_STORAGE_KEY, mode);
+    } catch {
+      // ignore
+    }
+  };
 
   // Page View Mode (1 Page vs 2 Pages spread for Desktop/Tablet)
   const [pageViewMode, setPageViewMode] = useState<PageViewMode>(() => {
@@ -607,46 +629,80 @@ export default function App() {
           ) : (
             <div className="w-full h-full min-h-0 flex flex-col items-stretch justify-center">
               
-              {/* Mobile View: Expanded Single Page for Maximum Ayah Screen Area */}
+              {/* Mobile View: Compact & Natural Word Proportions */}
               <div className="block md:hidden w-full h-full min-h-0">
-                <div className="w-full h-full max-w-[450px] mx-auto flex flex-col justify-center">
-                  <FifteenLineMushafPage
-                    pageData={currentPageData}
-                    blankTargets={blankTargets}
-                    activeBlankId={activeBlankTarget?.id}
-                    onSelectBlankId={handleSelectBlankById}
-                    selectedOptionId={activeBlankTarget?.userSelectedOptionId}
-                    isAnswered={activeBlankTarget?.isAnswered || false}
-                    isCorrect={activeBlankTarget?.isCorrect || false}
-                    theme={theme}
-                    onPlayAyahAudio={handlePlayAyahAudio}
-                    onOpenSettings={() => setIsSettingsOpen(true)}
-                    mistakesCount={stats.mistakeAyahs.length}
-                    showTranslation={showTranslation}
-                  />
+                <div className="w-full h-full max-w-[440px] px-0 sm:px-0 mx-auto flex flex-col justify-center">
+                  {pageRenderMode === 'authentic-image' ? (
+                    <AuthenticMushafPage
+                      pageData={currentPageData}
+                      blankTargets={blankTargets}
+                      activeBlankId={activeBlankTarget?.id}
+                      onSelectBlankId={handleSelectBlankById}
+                      selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                      isAnswered={activeBlankTarget?.isAnswered || false}
+                      isCorrect={activeBlankTarget?.isCorrect || false}
+                      theme={theme}
+                      onPlayAyahAudio={handlePlayAyahAudio}
+                      onOpenSettings={() => setIsSettingsOpen(true)}
+                      mistakesCount={stats.mistakeAyahs.length}
+                      showTranslation={showTranslation}
+                    />
+                  ) : (
+                    <FifteenLineMushafPage
+                      pageData={currentPageData}
+                      blankTargets={blankTargets}
+                      activeBlankId={activeBlankTarget?.id}
+                      onSelectBlankId={handleSelectBlankById}
+                      selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                      isAnswered={activeBlankTarget?.isAnswered || false}
+                      isCorrect={activeBlankTarget?.isCorrect || false}
+                      theme={theme}
+                      onPlayAyahAudio={handlePlayAyahAudio}
+                      onOpenSettings={() => setIsSettingsOpen(true)}
+                      mistakesCount={stats.mistakeAyahs.length}
+                      showTranslation={showTranslation}
+                    />
+                  )}
                 </div>
               </div>
 
-              {/* Tablet & Desktop View: 1-Page or 2-Pages Facing Spread (Expanded & Balanced) */}
+              {/* Tablet & Desktop View: 1-Page or 2-Pages Facing Spread */}
               <div className="hidden md:flex w-full h-full min-h-0 items-center justify-center gap-2 lg:gap-3">
                 {pageViewMode === 'double' && secondaryPageData ? (
                   <>
                     {/* Right Facing Page */}
-                    <div className="h-full flex-1 min-w-0 flex items-center justify-center max-w-[480px]">
-                      <FifteenLineMushafPage
-                        pageData={currentPageData}
-                        blankTargets={blankTargets}
-                        activeBlankId={activeBlankTarget?.id}
-                        onSelectBlankId={handleSelectBlankById}
-                        selectedOptionId={activeBlankTarget?.userSelectedOptionId}
-                        isAnswered={activeBlankTarget?.isAnswered || false}
-                        isCorrect={activeBlankTarget?.isCorrect || false}
-                        theme={theme}
-                        onPlayAyahAudio={handlePlayAyahAudio}
-                        onOpenSettings={() => setIsSettingsOpen(true)}
-                        mistakesCount={stats.mistakeAyahs.length}
-                        showTranslation={showTranslation}
-                      />
+                    <div className="h-full flex-1 min-w-0 flex items-center justify-center max-w-[460px] px-0 sm:px-0">
+                      {pageRenderMode === 'authentic-image' ? (
+                        <AuthenticMushafPage
+                          pageData={currentPageData}
+                          blankTargets={blankTargets}
+                          activeBlankId={activeBlankTarget?.id}
+                          onSelectBlankId={handleSelectBlankById}
+                          selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                          isAnswered={activeBlankTarget?.isAnswered || false}
+                          isCorrect={activeBlankTarget?.isCorrect || false}
+                          theme={theme}
+                          onPlayAyahAudio={handlePlayAyahAudio}
+                          onOpenSettings={() => setIsSettingsOpen(true)}
+                          mistakesCount={stats.mistakeAyahs.length}
+                          showTranslation={showTranslation}
+                        />
+                      ) : (
+                        <FifteenLineMushafPage
+                          pageData={currentPageData}
+                          blankTargets={blankTargets}
+                          activeBlankId={activeBlankTarget?.id}
+                          onSelectBlankId={handleSelectBlankById}
+                          selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                          isAnswered={activeBlankTarget?.isAnswered || false}
+                          isCorrect={activeBlankTarget?.isCorrect || false}
+                          theme={theme}
+                          onPlayAyahAudio={handlePlayAyahAudio}
+                          onOpenSettings={() => setIsSettingsOpen(true)}
+                          mistakesCount={stats.mistakeAyahs.length}
+                          showTranslation={showTranslation}
+                        />
+                      )}
                     </div>
 
                     {/* Authentic Medina Mushaf Book Spine / Center Binding Fold */}
@@ -657,42 +713,77 @@ export default function App() {
                     </div>
 
                     {/* Left Facing Page */}
-                    <div className="h-full flex-1 min-w-0 flex items-center justify-center max-w-[480px]">
-                      <FifteenLineMushafPage
-                        pageData={secondaryPageData}
-                        blankTargets={blankTargets}
-                        activeBlankId={activeBlankTarget?.id}
-                        onSelectBlankId={handleSelectBlankById}
-                        selectedOptionId={activeBlankTarget?.userSelectedOptionId}
-                        isAnswered={activeBlankTarget?.isAnswered || false}
-                        isCorrect={activeBlankTarget?.isCorrect || false}
-                        theme={theme}
-                        onPlayAyahAudio={handlePlayAyahAudio}
-                        onOpenSettings={() => setIsSettingsOpen(true)}
-                        mistakesCount={stats.mistakeAyahs.length}
-                        showTranslation={showTranslation}
-                        isSecondaryPage={true}
-                      />
+                    <div className="h-full flex-1 min-w-0 flex items-center justify-center max-w-[460px] px-0 sm:px-0">
+                      {pageRenderMode === 'authentic-image' ? (
+                        <AuthenticMushafPage
+                          pageData={secondaryPageData}
+                          blankTargets={blankTargets}
+                          activeBlankId={activeBlankTarget?.id}
+                          onSelectBlankId={handleSelectBlankById}
+                          selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                          isAnswered={activeBlankTarget?.isAnswered || false}
+                          isCorrect={activeBlankTarget?.isCorrect || false}
+                          theme={theme}
+                          onPlayAyahAudio={handlePlayAyahAudio}
+                          onOpenSettings={() => setIsSettingsOpen(true)}
+                          mistakesCount={stats.mistakeAyahs.length}
+                          showTranslation={showTranslation}
+                          isSecondaryPage={true}
+                        />
+                      ) : (
+                        <FifteenLineMushafPage
+                          pageData={secondaryPageData}
+                          blankTargets={blankTargets}
+                          activeBlankId={activeBlankTarget?.id}
+                          onSelectBlankId={handleSelectBlankById}
+                          selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                          isAnswered={activeBlankTarget?.isAnswered || false}
+                          isCorrect={activeBlankTarget?.isCorrect || false}
+                          theme={theme}
+                          onPlayAyahAudio={handlePlayAyahAudio}
+                          onOpenSettings={() => setIsSettingsOpen(true)}
+                          mistakesCount={stats.mistakeAyahs.length}
+                          showTranslation={showTranslation}
+                          isSecondaryPage={true}
+                        />
+                      )}
                     </div>
                   </>
                 ) : (
                   /* Single Page Focused Mode - Balanced Quran Book Proportion */
                   <div className="w-full h-full min-h-0 flex items-center justify-center">
-                    <div className="w-full h-full max-w-[480px] mx-auto flex flex-col justify-center">
-                      <FifteenLineMushafPage
-                        pageData={currentPageData}
-                        blankTargets={blankTargets}
-                        activeBlankId={activeBlankTarget?.id}
-                        onSelectBlankId={handleSelectBlankById}
-                        selectedOptionId={activeBlankTarget?.userSelectedOptionId}
-                        isAnswered={activeBlankTarget?.isAnswered || false}
-                        isCorrect={activeBlankTarget?.isCorrect || false}
-                        theme={theme}
-                        onPlayAyahAudio={handlePlayAyahAudio}
-                        onOpenSettings={() => setIsSettingsOpen(true)}
-                        mistakesCount={stats.mistakeAyahs.length}
-                        showTranslation={showTranslation}
-                      />
+                    <div className="w-full h-full max-w-[480px] px-0 sm:px-0 mx-auto flex flex-col justify-center">
+                      {pageRenderMode === 'authentic-image' ? (
+                        <AuthenticMushafPage
+                          pageData={currentPageData}
+                          blankTargets={blankTargets}
+                          activeBlankId={activeBlankTarget?.id}
+                          onSelectBlankId={handleSelectBlankById}
+                          selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                          isAnswered={activeBlankTarget?.isAnswered || false}
+                          isCorrect={activeBlankTarget?.isCorrect || false}
+                          theme={theme}
+                          onPlayAyahAudio={handlePlayAyahAudio}
+                          onOpenSettings={() => setIsSettingsOpen(true)}
+                          mistakesCount={stats.mistakeAyahs.length}
+                          showTranslation={showTranslation}
+                        />
+                      ) : (
+                        <FifteenLineMushafPage
+                          pageData={currentPageData}
+                          blankTargets={blankTargets}
+                          activeBlankId={activeBlankTarget?.id}
+                          onSelectBlankId={handleSelectBlankById}
+                          selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                          isAnswered={activeBlankTarget?.isAnswered || false}
+                          isCorrect={activeBlankTarget?.isCorrect || false}
+                          theme={theme}
+                          onPlayAyahAudio={handlePlayAyahAudio}
+                          onOpenSettings={() => setIsSettingsOpen(true)}
+                          mistakesCount={stats.mistakeAyahs.length}
+                          showTranslation={showTranslation}
+                        />
+                      )}
                     </div>
                   </div>
                 )}
@@ -787,6 +878,8 @@ export default function App() {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        pageRenderMode={pageRenderMode}
+        onChangePageRenderMode={handleChangePageRenderMode}
         challengeType={challengeType}
         onChangeChallengeType={handleChangeChallengeType}
         difficulty={difficulty}

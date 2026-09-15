@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { toArabicDigits } from '../services/quranApi';
 import { triggerHaptic } from '../utils/haptics';
+import { stripTajweedMarkers } from '../utils/kashida';
 
 interface SideVerseCarouselProps {
   blankTargets: BlankTarget[];
@@ -685,7 +686,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                         className="w-full font-quran text-base sm:text-lg md:text-xl font-bold leading-relaxed text-right my-0.5" 
                         dir="rtl"
                       >
-                        {option.text}
+                        {stripTajweedMarkers(option.text)}
                       </div>
 
                       {/* English Translation if enabled */}
