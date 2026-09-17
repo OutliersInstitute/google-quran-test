@@ -38,6 +38,8 @@ interface SettingsModalProps {
   // Auto-advance
   autoAdvance: boolean;
   onToggleAutoAdvance: () => void;
+  autoAdvanceOnCorrect?: boolean;
+  onToggleAutoAdvanceOnCorrect?: () => void;
   // Theme
   theme: MushafTheme;
   onChangeTheme: (theme: MushafTheme) => void;
@@ -81,6 +83,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onToggleHaptics,
   autoAdvance,
   onToggleAutoAdvance,
+  autoAdvanceOnCorrect = true,
+  onToggleAutoAdvanceOnCorrect,
   theme,
   onChangeTheme,
   onShuffleNewBlanks,
@@ -462,6 +466,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <span 
                       className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
                         autoPlayAudio ? 'transform translate-x-5' : ''
+                      }`} 
+                    />
+                  </button>
+                </div>
+
+                {/* Auto Advance Ayah on Correct */}
+                <div className="p-3 rounded-2xl bg-white dark:bg-stone-800 border border-amber-900/15 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-amber-900/10 text-amber-900 dark:text-amber-200">
+                      <Sparkles className="w-4 h-4 text-amber-700 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-xs">Auto-Next Ayah on Correct</div>
+                      <div className="text-[10px] text-stone-500 dark:text-stone-400">Proceed to next verse upon right answer</div>
+                    </div>
+                  </div>
+                  <button
+                    id="settings-toggle-autoadvance-correct-btn"
+                    onClick={onToggleAutoAdvanceOnCorrect}
+                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
+                      autoAdvanceOnCorrect ? 'bg-amber-800' : 'bg-stone-300 dark:bg-stone-700'
+                    }`}
+                  >
+                    <span 
+                      className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                        autoAdvanceOnCorrect ? 'transform translate-x-5' : ''
                       }`} 
                     />
                   </button>

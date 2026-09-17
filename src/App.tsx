@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { BlankTarget, CarouselOption, ChallengeType, DifficultyLevel, GameStats, MushafTheme, QuranPageData, Surah, Ayah, PageRangeConfig, RangeSessionStats, PageViewMode, PageRenderMode, PageMarginConfig } from './types';
 import { BUILT_IN_SURAHS } from './data/quranData';
 import { fetchPage } from './services/quranApi';
@@ -26,6 +26,7 @@ import { triggerHaptic, getHapticsEnabled, setHapticsEnabled } from './utils/hap
 const STATS_STORAGE_KEY = 'mushaf_15line_game_stats_v3';
 const BLANK_COUNT_STORAGE_KEY = 'mushaf_blank_count_pref_v1';
 const AUTO_ADVANCE_STORAGE_KEY = 'mushaf_auto_advance_v1';
+const AUTO_ADVANCE_CORRECT_STORAGE_KEY = 'mushaf_auto_advance_correct_v1';
 const AUTO_PLAY_AUDIO_STORAGE_KEY = 'mushaf_auto_play_audio_v1';
 const PAGE_VIEW_MODE_STORAGE_KEY = 'mushaf_page_view_mode_v1';
 const PAGE_RENDER_MODE_STORAGE_KEY = 'mushaf_page_render_mode_v1';
@@ -148,6 +149,39 @@ export default function App() {
     }
     return true; // default enabled for smooth memorization flow
   });
+
+  // Auto-advance directly to the next ayah/blank upon selecting the right option
+  const [autoAdvanceOnCorrect, setAutoAdvanceOnCorrect] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(AUTO_ADVANCE_CORRECT_STORAGE_KEY);
+      if (saved !== null) return saved === 'true';
+    } catch {
+      // fallback
+    }
+    return true; // default enabled for fluid memorization
+  });
+
+  const handleToggleAutoAdvanceOnCorrect = () => {
+    setAutoAdvanceOnCorrect(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem(AUTO_ADVANCE_CORRECT_STORAGE_KEY, String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
+  const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimerRef.current) {
+        clearTimeout(autoAdvanceTimerRef.current);
+      }
+    };
+  }, []);
 
   // Blank count choice: 1, 2, 3, 5, 'all'
   const [blankCountChoice, setBlankCountChoice] = useState<number | 'all'>(() => {
@@ -404,6 +438,9 @@ export default function App() {
 
   // Handle Range & Spread Next Page Navigation
   const handleNextPage = useCallback(() => {
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+    }
     triggerHaptic('pageFlip');
     const step = pageViewMode === 'double' ? 2 : 1;
     if (activeRange?.enabled) {
@@ -424,6 +461,9 @@ export default function App() {
 
   // Handle Previous Page Navigation
   const handlePreviousPage = useCallback(() => {
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+    }
     triggerHaptic('pageFlip');
     const step = pageViewMode === 'double' ? 2 : 1;
     if (currentPageNumber - step >= 1) {
@@ -492,6 +532,9 @@ export default function App() {
 
   // Generate fresh random blanks on current page / spread
   const handleShuffleNewBlanks = () => {
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+    }
     triggerHaptic('medium');
     if (!currentPageData || currentPageData.ayahs.length === 0) return;
     const targets = generateBlanksForPages(currentPageData, secondaryPageData, blankCountChoice, challengeType, difficulty, isMobile);
@@ -501,6 +544,9 @@ export default function App() {
 
   // Reset answer states on current blanks so user can test again
   const handleResetPageBlanks = () => {
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+    }
     triggerHaptic('medium');
     setBlankTargets(prev => prev.map(t => ({
       ...t,
@@ -513,11 +559,22 @@ export default function App() {
 
   // Handle clicking directly on a blank on the 15-line Mushaf page
   const handleSelectBlankById = (blankId: string) => {
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+    }
     triggerHaptic('light');
     const idx = blankTargets.findIndex(t => t.id === blankId);
     if (idx !== -1) {
       setActiveBlankIndex(idx);
     }
+  };
+
+  // Handle selecting blank index from carousel controls
+  const handleSelectBlankIndex = (idx: number) => {
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+    }
+    setActiveBlankIndex(idx);
   };
 
   // Handle option selection
@@ -533,7 +590,7 @@ export default function App() {
     }
 
     // Update active blank in array
-    setBlankTargets(prev => prev.map((target, idx) => {
+    const updatedTargets = blankTargets.map((target, idx) => {
       if (idx === activeBlankIndex) {
         return {
           ...target,
@@ -544,7 +601,8 @@ export default function App() {
         };
       }
       return target;
-    }));
+    });
+    setBlankTargets(updatedTargets);
 
     // Update game statistics
     setStats(prev => {
@@ -592,6 +650,27 @@ export default function App() {
     if (correct && autoPlayAudio && activeTarget.fullAyah.audio) {
       setActiveAudioUrl(activeTarget.fullAyah.audio);
       setPlayingAyah(activeTarget.fullAyah);
+    }
+
+    // Auto-advance to the next ayah/blank upon selecting the right option
+    if (correct && autoAdvanceOnCorrect) {
+      if (autoAdvanceTimerRef.current) {
+        clearTimeout(autoAdvanceTimerRef.current);
+      }
+
+      autoAdvanceTimerRef.current = setTimeout(() => {
+        // Find next unanswered blank in order
+        const nextUnansweredIdx = updatedTargets.findIndex((b, i) => i > activeBlankIndex && !b.isAnswered);
+        if (nextUnansweredIdx !== -1) {
+          setActiveBlankIndex(nextUnansweredIdx);
+        } else {
+          // Check if any earlier blank was skipped
+          const firstUnanswered = updatedTargets.findIndex(b => !b.isAnswered);
+          if (firstUnanswered !== -1) {
+            setActiveBlankIndex(firstUnanswered);
+          }
+        }
+      }, 700);
     }
   };
 
@@ -839,7 +918,7 @@ export default function App() {
           <SideVerseCarousel
             blankTargets={blankTargets}
             activeBlankIndex={activeBlankIndex}
-            onSelectBlankIndex={setActiveBlankIndex}
+            onSelectBlankIndex={handleSelectBlankIndex}
             blankCountChoice={blankCountChoice}
             onChangeBlankCountChoice={handleChangeBlankCountChoice}
             selectedOption={activeBlankTarget?.selectedOption || null}
@@ -881,7 +960,7 @@ export default function App() {
           <MobileBottomCarousel
             blankTargets={blankTargets}
             activeBlankIndex={activeBlankIndex}
-            onSelectBlankIndex={setActiveBlankIndex}
+            onSelectBlankIndex={handleSelectBlankIndex}
             selectedOption={activeBlankTarget?.selectedOption || null}
             isAnswered={activeBlankTarget?.isAnswered || false}
             isCorrect={activeBlankTarget?.isCorrect || false}
@@ -938,6 +1017,8 @@ export default function App() {
         onToggleHaptics={handleToggleHaptics}
         autoAdvance={autoAdvance}
         onToggleAutoAdvance={() => setAutoAdvance(!autoAdvance)}
+        autoAdvanceOnCorrect={autoAdvanceOnCorrect}
+        onToggleAutoAdvanceOnCorrect={handleToggleAutoAdvanceOnCorrect}
         theme={theme}
         onChangeTheme={setTheme}
         onShuffleNewBlanks={handleShuffleNewBlanks}
