@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { BlankTarget, CarouselOption, ChallengeType, DifficultyLevel, GameStats, MushafTheme, QuranPageData, Surah, Ayah, PageRangeConfig, RangeSessionStats, PageViewMode, PageRenderMode } from './types';
+import { BlankTarget, CarouselOption, ChallengeType, DifficultyLevel, GameStats, MushafTheme, QuranPageData, Surah, Ayah, PageRangeConfig, RangeSessionStats, PageViewMode, PageRenderMode, PageMarginConfig } from './types';
 import { BUILT_IN_SURAHS } from './data/quranData';
 import { fetchPage } from './services/quranApi';
 import { createPageBlankTargets } from './utils/fifteenLineEngine';
@@ -29,6 +29,7 @@ const AUTO_ADVANCE_STORAGE_KEY = 'mushaf_auto_advance_v1';
 const AUTO_PLAY_AUDIO_STORAGE_KEY = 'mushaf_auto_play_audio_v1';
 const PAGE_VIEW_MODE_STORAGE_KEY = 'mushaf_page_view_mode_v1';
 const PAGE_RENDER_MODE_STORAGE_KEY = 'mushaf_page_render_mode_v1';
+const PAGE_MARGINS_STORAGE_KEY = 'mushaf_page_margins_v1';
 
 // Helper to determine facing spread page numbers in Medina Mushaf
 export function getSpreadPageNumbers(pageNum: number, mode: PageViewMode): { rightPage: number; leftPage: number | null } {
@@ -81,6 +82,35 @@ export default function App() {
     }
     return 'single';
   });
+
+  // Page Margins (Adjustable spacing for Mushaf page)
+  const [pageMargins, setPageMargins] = useState<PageMarginConfig>(() => {
+    try {
+      const saved = localStorage.getItem(PAGE_MARGINS_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.horizontalPadding === 'number' && typeof parsed.verticalPadding === 'number') {
+          return parsed;
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return {
+      preset: 'standard',
+      horizontalPadding: 24,
+      verticalPadding: 10,
+    };
+  });
+
+  const handleChangePageMargins = (newMargins: PageMarginConfig) => {
+    setPageMargins(newMargins);
+    try {
+      localStorage.setItem(PAGE_MARGINS_STORAGE_KEY, JSON.stringify(newMargins));
+    } catch {
+      // ignore
+    }
+  };
 
   // Auto-play ayah recitation audio upon completing a blank (Default to false / optional)
   const [autoPlayAudio, setAutoPlayAudio] = useState<boolean>(() => {
@@ -642,6 +672,7 @@ export default function App() {
                       isAnswered={activeBlankTarget?.isAnswered || false}
                       isCorrect={activeBlankTarget?.isCorrect || false}
                       theme={theme}
+                      pageMargins={pageMargins}
                       onPlayAyahAudio={handlePlayAyahAudio}
                       onOpenSettings={() => setIsSettingsOpen(true)}
                       mistakesCount={stats.mistakeAyahs.length}
@@ -657,6 +688,7 @@ export default function App() {
                       isAnswered={activeBlankTarget?.isAnswered || false}
                       isCorrect={activeBlankTarget?.isCorrect || false}
                       theme={theme}
+                      pageMargins={pageMargins}
                       onPlayAyahAudio={handlePlayAyahAudio}
                       onOpenSettings={() => setIsSettingsOpen(true)}
                       mistakesCount={stats.mistakeAyahs.length}
@@ -682,6 +714,7 @@ export default function App() {
                           isAnswered={activeBlankTarget?.isAnswered || false}
                           isCorrect={activeBlankTarget?.isCorrect || false}
                           theme={theme}
+                          pageMargins={pageMargins}
                           onPlayAyahAudio={handlePlayAyahAudio}
                           onOpenSettings={() => setIsSettingsOpen(true)}
                           mistakesCount={stats.mistakeAyahs.length}
@@ -697,6 +730,7 @@ export default function App() {
                           isAnswered={activeBlankTarget?.isAnswered || false}
                           isCorrect={activeBlankTarget?.isCorrect || false}
                           theme={theme}
+                          pageMargins={pageMargins}
                           onPlayAyahAudio={handlePlayAyahAudio}
                           onOpenSettings={() => setIsSettingsOpen(true)}
                           mistakesCount={stats.mistakeAyahs.length}
@@ -724,6 +758,7 @@ export default function App() {
                           isAnswered={activeBlankTarget?.isAnswered || false}
                           isCorrect={activeBlankTarget?.isCorrect || false}
                           theme={theme}
+                          pageMargins={pageMargins}
                           onPlayAyahAudio={handlePlayAyahAudio}
                           onOpenSettings={() => setIsSettingsOpen(true)}
                           mistakesCount={stats.mistakeAyahs.length}
@@ -740,6 +775,7 @@ export default function App() {
                           isAnswered={activeBlankTarget?.isAnswered || false}
                           isCorrect={activeBlankTarget?.isCorrect || false}
                           theme={theme}
+                          pageMargins={pageMargins}
                           onPlayAyahAudio={handlePlayAyahAudio}
                           onOpenSettings={() => setIsSettingsOpen(true)}
                           mistakesCount={stats.mistakeAyahs.length}
@@ -763,6 +799,7 @@ export default function App() {
                           isAnswered={activeBlankTarget?.isAnswered || false}
                           isCorrect={activeBlankTarget?.isCorrect || false}
                           theme={theme}
+                          pageMargins={pageMargins}
                           onPlayAyahAudio={handlePlayAyahAudio}
                           onOpenSettings={() => setIsSettingsOpen(true)}
                           mistakesCount={stats.mistakeAyahs.length}
@@ -778,6 +815,7 @@ export default function App() {
                           isAnswered={activeBlankTarget?.isAnswered || false}
                           isCorrect={activeBlankTarget?.isCorrect || false}
                           theme={theme}
+                          pageMargins={pageMargins}
                           onPlayAyahAudio={handlePlayAyahAudio}
                           onOpenSettings={() => setIsSettingsOpen(true)}
                           mistakesCount={stats.mistakeAyahs.length}
@@ -859,6 +897,7 @@ export default function App() {
             onToggleAutoAdvance={() => setAutoAdvance(!autoAdvance)}
             difficulty={difficulty}
             onOpenSettings={() => setIsSettingsOpen(true)}
+            showTranslation={showTranslation}
           />
         </div>
 
@@ -880,6 +919,8 @@ export default function App() {
         onClose={() => setIsSettingsOpen(false)}
         pageRenderMode={pageRenderMode}
         onChangePageRenderMode={handleChangePageRenderMode}
+        pageMargins={pageMargins}
+        onChangePageMargins={handleChangePageMargins}
         challengeType={challengeType}
         onChangeChallengeType={handleChangeChallengeType}
         difficulty={difficulty}

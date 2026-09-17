@@ -2,10 +2,10 @@ import React from 'react';
 import { 
   X, Settings, Sparkles, Layers, Sliders, Volume2, VolumeX, Eye, EyeOff, 
   RotateCcw, Shuffle, BookOpen, Bookmark, HelpCircle, Check, ArrowRight, 
-  Zap, Palette, ShieldAlert, Award, Compass, FileText, Smartphone
+  Zap, Palette, ShieldAlert, Award, Compass, FileText, Smartphone, Maximize2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChallengeType, DifficultyLevel, MushafTheme, PageViewMode, PageRenderMode, Surah, PageRangeConfig } from '../types';
+import { ChallengeType, DifficultyLevel, MushafTheme, PageViewMode, PageRenderMode, Surah, PageRangeConfig, PageMarginConfig, PageMarginPreset } from '../types';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -13,6 +13,9 @@ interface SettingsModalProps {
   // Page Display Mode (Authentic Printed Medina Mushaf vs Digital Text)
   pageRenderMode: PageRenderMode;
   onChangePageRenderMode: (mode: PageRenderMode) => void;
+  // Page Margins
+  pageMargins: PageMarginConfig;
+  onChangePageMargins: (margins: PageMarginConfig) => void;
   // Challenge Mode & Difficulty
   challengeType: ChallengeType;
   onChangeChallengeType: (type: ChallengeType) => void;
@@ -59,6 +62,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   pageRenderMode,
   onChangePageRenderMode,
+  pageMargins,
+  onChangePageMargins,
   challengeType,
   onChangeChallengeType,
   difficulty,
@@ -635,6 +640,115 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className="w-6 h-6 rounded-full bg-white border border-stone-400 shadow-xs" />
                   <span className="text-[11px] font-bold">White</span>
                 </button>
+              </div>
+            </div>
+
+            {/* SECTION 6: Page Margins & Padding */}
+            <div className="space-y-2.5 p-3.5 rounded-2xl bg-white dark:bg-stone-800/90 border border-amber-900/15">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-amber-950 dark:text-amber-200 flex items-center gap-1.5 font-display">
+                  <Maximize2 className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+                  Page Margins & Spacing
+                </label>
+                <span className="text-[11px] font-medium text-amber-900 dark:text-amber-300">
+                  {pageMargins.horizontalPadding}px horiz • {pageMargins.verticalPadding}px vert
+                </span>
+              </div>
+
+              {/* Preset quick buttons */}
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  id="settings-margin-compact-btn"
+                  type="button"
+                  onClick={() => onChangePageMargins({ preset: 'compact', horizontalPadding: 12, verticalPadding: 6 })}
+                  className={`py-2 px-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
+                    pageMargins.preset === 'compact'
+                      ? 'bg-amber-800 text-white border-amber-800 shadow-xs'
+                      : 'bg-amber-50/50 dark:bg-stone-700/50 text-stone-800 dark:text-stone-200 border-amber-900/15 hover:border-amber-700/40'
+                  }`}
+                >
+                  <span className="text-xs font-bold">Compact</span>
+                  <span className={`text-[10px] ${pageMargins.preset === 'compact' ? 'text-amber-200' : 'text-stone-500 dark:text-stone-400'}`}>12px / 6px</span>
+                </button>
+
+                <button
+                  id="settings-margin-standard-btn"
+                  type="button"
+                  onClick={() => onChangePageMargins({ preset: 'standard', horizontalPadding: 24, verticalPadding: 10 })}
+                  className={`py-2 px-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
+                    pageMargins.preset === 'standard'
+                      ? 'bg-amber-800 text-white border-amber-800 shadow-xs'
+                      : 'bg-amber-50/50 dark:bg-stone-700/50 text-stone-800 dark:text-stone-200 border-amber-900/15 hover:border-amber-700/40'
+                  }`}
+                >
+                  <span className="text-xs font-bold">Standard</span>
+                  <span className={`text-[10px] ${pageMargins.preset === 'standard' ? 'text-amber-200' : 'text-stone-500 dark:text-stone-400'}`}>24px / 10px</span>
+                </button>
+
+                <button
+                  id="settings-margin-spacious-btn"
+                  type="button"
+                  onClick={() => onChangePageMargins({ preset: 'spacious', horizontalPadding: 36, verticalPadding: 16 })}
+                  className={`py-2 px-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
+                    pageMargins.preset === 'spacious'
+                      ? 'bg-amber-800 text-white border-amber-800 shadow-xs'
+                      : 'bg-amber-50/50 dark:bg-stone-700/50 text-stone-800 dark:text-stone-200 border-amber-900/15 hover:border-amber-700/40'
+                  }`}
+                >
+                  <span className="text-xs font-bold">Spacious</span>
+                  <span className={`text-[10px] ${pageMargins.preset === 'spacious' ? 'text-amber-200' : 'text-stone-500 dark:text-stone-400'}`}>36px / 16px</span>
+                </button>
+              </div>
+
+              {/* Sliders for precision fine-tuning */}
+              <div className="space-y-2 pt-2 border-t border-amber-900/10 dark:border-stone-700">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-stone-600 dark:text-stone-300 font-medium">Horizontal Page Margin (Sides)</span>
+                    <span className="font-mono font-bold text-amber-900 dark:text-amber-300">{pageMargins.horizontalPadding} px</span>
+                  </div>
+                  <input
+                    id="settings-margin-horizontal-slider"
+                    type="range"
+                    min="4"
+                    max="56"
+                    step="2"
+                    value={pageMargins.horizontalPadding}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      onChangePageMargins({
+                        preset: 'custom',
+                        horizontalPadding: val,
+                        verticalPadding: pageMargins.verticalPadding
+                      });
+                    }}
+                    className="w-full accent-amber-800 h-1.5 bg-stone-200 dark:bg-stone-700 rounded-lg cursor-pointer"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-stone-600 dark:text-stone-300 font-medium">Vertical Page Margin (Top & Bottom)</span>
+                    <span className="font-mono font-bold text-amber-900 dark:text-amber-300">{pageMargins.verticalPadding} px</span>
+                  </div>
+                  <input
+                    id="settings-margin-vertical-slider"
+                    type="range"
+                    min="2"
+                    max="30"
+                    step="2"
+                    value={pageMargins.verticalPadding}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      onChangePageMargins({
+                        preset: 'custom',
+                        horizontalPadding: pageMargins.horizontalPadding,
+                        verticalPadding: val
+                      });
+                    }}
+                    className="w-full accent-amber-800 h-1.5 bg-stone-200 dark:bg-stone-700 rounded-lg cursor-pointer"
+                  />
+                </div>
               </div>
             </div>
 

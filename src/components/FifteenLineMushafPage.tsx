@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ayah, BlankTarget, MushafTheme, QuranPageData, Surah, PageFifteenLine, PageLineItem } from '../types';
+import { Ayah, BlankTarget, MushafTheme, QuranPageData, Surah, PageFifteenLine, PageLineItem, PageMarginConfig } from '../types';
 import { toArabicDigits } from '../services/quranApi';
 import { Settings } from 'lucide-react';
 import { formatPageIntoFifteenLines } from '../utils/fifteenLineEngine';
@@ -15,6 +15,7 @@ interface FifteenLineMushafPageProps {
   isAnswered?: boolean;
   isCorrect?: boolean;
   theme: MushafTheme;
+  pageMargins?: PageMarginConfig;
   onPlayAyahAudio?: (ayah: Ayah) => void;
   onSelectBlankId?: (blankId: string) => void;
   onSelectBlank?: (blankId: string) => void;
@@ -33,6 +34,7 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
   isAnswered = false,
   isCorrect = false,
   theme,
+  pageMargins,
   onPlayAyahAudio,
   onSelectBlankId,
   onSelectBlank,
@@ -78,7 +80,10 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
       markerColor: 'text-[#3a2e22]',
       pageNumber: 'text-[#3a2e22]',
       surahBannerBg: 'bg-[#f5ecda] border-[#3a2e22]',
-      bismillahColor: 'text-[#2a2016]'
+      bismillahColor: 'text-[#2a2016]',
+      blankSlotBg: 'bg-[#f3ebe1] dark:bg-[#342b20]',
+      blankSlotActiveBg: 'bg-[#ebdccb] dark:bg-[#443828]',
+      blankSlotBorder: 'border-[#d4c3b0] dark:border-[#5a4835]'
     },
     emerald: {
       bg: 'bg-[#f4f8f5] text-[#0f281e]',
@@ -92,7 +97,10 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
       markerColor: 'text-[#1b4332]',
       pageNumber: 'text-[#1b4332]',
       surahBannerBg: 'bg-[#e2efe7] border-[#1b4332]',
-      bismillahColor: 'text-[#143628]'
+      bismillahColor: 'text-[#143628]',
+      blankSlotBg: 'bg-[#e7eee9] dark:bg-[#1a382c]',
+      blankSlotActiveBg: 'bg-[#d8e6dc] dark:bg-[#224838]',
+      blankSlotBorder: 'border-[#b8cfc0] dark:border-[#2f5e4b]'
     },
     midnight: {
       bg: 'bg-[#15191c] text-[#f1ece1]',
@@ -106,7 +114,10 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
       markerColor: 'text-[#e5c07b]',
       pageNumber: 'text-[#d4af37]',
       surahBannerBg: 'bg-[#22282e] border-[#d4af37]',
-      bismillahColor: 'text-[#f5d78e]'
+      bismillahColor: 'text-[#f5d78e]',
+      blankSlotBg: 'bg-[#262c33] dark:bg-[#262c33]',
+      blankSlotActiveBg: 'bg-[#333b45] dark:bg-[#333b45]',
+      blankSlotBorder: 'border-[#4a5563] dark:border-[#4a5563]'
     },
     'classic-white': {
       bg: 'bg-[#ffffff] text-[#111111]',
@@ -120,7 +131,10 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
       markerColor: 'text-[#222222]',
       pageNumber: 'text-[#222222]',
       surahBannerBg: 'bg-[#f5f5f5] border-[#222222]',
-      bismillahColor: 'text-[#111111]'
+      bismillahColor: 'text-[#111111]',
+      blankSlotBg: 'bg-[#f5f2eb]',
+      blankSlotActiveBg: 'bg-[#eae4d5]',
+      blankSlotBorder: 'border-[#dcd4c5]'
     }
   }[theme];
 
@@ -141,10 +155,19 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
     ? primarySurah.englishName
     : `Surah ${primarySurah.englishName}`;
 
+  // Dynamic margin padding style if configured
+  const pageMarginStyle: React.CSSProperties = pageMargins ? {
+    paddingLeft: `${pageMargins.horizontalPadding}px`,
+    paddingRight: `${pageMargins.horizontalPadding}px`,
+    paddingTop: `${pageMargins.verticalPadding}px`,
+    paddingBottom: `${pageMargins.verticalPadding}px`,
+  } : {};
+
   return (
     <div
       id={`mushaf-15line-page-${pageNumber}`}
-      className={`relative w-full h-full max-h-full flex flex-col justify-between transition-all duration-300 px-3 sm:px-5 md:px-7 py-2 sm:py-2.5 ${themeClasses.bg} rounded-xl sm:rounded-2xl overflow-hidden select-text`}
+      style={pageMarginStyle}
+      className={`relative w-full h-full max-h-full flex flex-col justify-between transition-all duration-300 ${pageMargins ? '' : 'px-3 sm:px-5 md:px-7 py-2 sm:py-2.5'} ${themeClasses.bg} rounded-xl sm:rounded-2xl overflow-hidden select-text`}
     >
       {/* Top Margin Header: Surah Name (Left), Settings Button (Inline), Juz/Hizb (Right) */}
       <div 
@@ -257,7 +280,7 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
               dir="rtl"
             >
               <div
-                className={`w-full font-quran text-[clamp(14px,2.2vh,22px)] sm:text-[clamp(15px,2.4vh,24px)] md:text-[clamp(16px,2.5vh,26px)] leading-[1.45] ${themeClasses.verseColor} select-text overflow-visible text-center`}
+                className={`w-full font-quran text-[clamp(13px,1.9vh,20px)] sm:text-[clamp(14px,2.1vh,22px)] md:text-[clamp(15px,2.3vh,24px)] leading-[1.38] ${themeClasses.verseColor} select-text overflow-visible text-center whitespace-nowrap`}
                 style={{
                   textAlign: 'center',
                   textAlignLast: 'center',
@@ -325,7 +348,7 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
                     const slotIsCorrect = item.isCorrect;
                     const isContinuation = item.isContinuation;
                     const wordsCount = item.hiddenWordsCount || 1;
-                    const dynamicMinWidth = Math.max(34, Math.min(wordsCount * 18, 85));
+                    const dynamicMinWidth = Math.max(36, Math.min(wordsCount * 28, 120));
 
                     if (!slotIsAnswered) {
                       if (slotIsActive) {
@@ -334,11 +357,14 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
                             <span
                               id={`active-blank-slot-${slotBlankIndex}`}
                               onClick={() => slotBlankId && handleBlankClick?.(slotBlankId)}
-                              className="inline-flex items-center justify-center relative px-1.5 py-0.5 border-b-[2.5px] border-red-600 dark:border-red-500 bg-red-500/15 dark:bg-red-950/40 rounded-t cursor-pointer align-middle select-none transition-colors"
-                              style={{ minWidth: `${dynamicMinWidth}px` }}
+                              className={`inline-flex items-center justify-center relative px-2.5 py-0 border border-b-[2.5px] border-b-red-600 dark:border-b-red-500 rounded-sm cursor-pointer align-middle select-none transition-all mx-1 shadow-xs ${themeClasses.blankSlotActiveBg} ${themeClasses.blankSlotBorder}`}
+                              style={{
+                                minWidth: `${dynamicMinWidth}px`,
+                                height: '26px'
+                              }}
                               title={`Active Blank ${slotBlankIndex} - Underlined in red. Select answer in the challenge panel.`}
                             >
-                              <span className="font-sans font-bold text-[10px] sm:text-[11px] text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/70 px-1 py-0.5 rounded border border-red-400/60 dark:border-red-600/60 select-none text-center leading-none tracking-tight">
+                              <span className="font-sans font-bold text-[10px] sm:text-[11px] text-red-700 dark:text-red-300 bg-red-100/90 dark:bg-red-900/70 px-1.5 py-0.5 rounded border border-red-400/60 dark:border-red-600/60 select-none text-center leading-none tracking-tight">
                                 {isContinuation ? `(${slotBlankIndex} cont.)` : `(${slotBlankIndex})`}
                               </span>
                             </span>
@@ -351,11 +377,14 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
                             <span
                               id={`inactive-blank-slot-${slotBlankIndex}`}
                               onClick={() => slotBlankId && handleBlankClick?.(slotBlankId)}
-                              className="inline-flex items-center justify-center relative px-1.5 py-0.5 border-b border-red-400/60 dark:border-red-500/40 hover:border-red-600 bg-red-500/5 hover:bg-red-500/10 rounded-t cursor-pointer align-middle select-none transition-colors"
-                              style={{ minWidth: `${dynamicMinWidth}px` }}
+                              className={`inline-flex items-center justify-center relative px-2.5 py-0 border border-b-2 border-b-red-500/70 dark:border-b-red-400/70 hover:border-b-red-600 rounded-sm cursor-pointer align-middle select-none transition-all mx-1 shadow-2xs ${themeClasses.blankSlotBg} ${themeClasses.blankSlotBorder}`}
+                              style={{
+                                minWidth: `${dynamicMinWidth}px`,
+                                height: '26px'
+                              }}
                               title={`Blank ${slotBlankIndex} - Underlined in red. Click to solve this verse.`}
                             >
-                              <span className="font-sans font-semibold text-[10px] sm:text-[11px] text-red-600/90 dark:text-red-400/90 select-none text-center leading-none tracking-tight">
+                              <span className="font-sans font-medium text-[10px] sm:text-[11px] text-stone-700 dark:text-stone-300 select-none text-center leading-none tracking-tight opacity-90">
                                 {isContinuation ? `(${slotBlankIndex} cont.)` : `(${slotBlankIndex})`}
                               </span>
                             </span>
@@ -364,24 +393,28 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
                         );
                       }
                     } else {
+                      // Answered state: render words naturally in place with a clean, unobtrusive highlight
+                      const words = item.text ? item.text.trim().split(/\s+/).filter(Boolean) : [];
                       return (
                         <React.Fragment key={`l${line.lineNumber}_resolved${itemIdx}`}>
                           <span
                             id={`resolved-blank-slot-${slotBlankIndex}`}
                             onClick={() => slotBlankId && handleBlankClick?.(slotBlankId)}
-                            className={`inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded font-quran font-bold align-middle text-[0.88em] whitespace-nowrap flex-shrink-0 cursor-pointer ${
+                            className={`inline cursor-pointer select-text rounded-xs px-1 py-0.5 border-b-2 transition-colors duration-150 mx-0.5 ${
                               slotIsCorrect
-                                ? 'bg-emerald-50 dark:bg-emerald-950/40 border-b-2 border-emerald-600 text-emerald-950 dark:text-emerald-100'
-                                : 'bg-red-50 dark:bg-red-950/40 border-b-2 border-red-600 text-red-950 dark:text-red-100'
+                                ? 'text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 dark:bg-emerald-400/15 border-emerald-600 font-semibold'
+                                : 'text-rose-800 dark:text-rose-300 bg-rose-500/10 dark:bg-rose-400/15 border-rose-600 font-semibold'
                             }`}
-                            title={`Blank ${slotBlankIndex} (${slotIsCorrect ? 'Correct' : 'Incorrect'})`}
+                            title={`Blank ${slotBlankIndex} (${slotIsCorrect ? 'Correct' : 'Incorrect'}) - Click to view in challenge panel`}
                           >
-                            <span className={`font-sans text-[9px] sm:text-[10px] font-bold px-1 py-0.2 rounded select-none ${
-                              slotIsCorrect ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60' : 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/60'
-                            }`}>
-                              ({slotBlankIndex}) {slotIsCorrect ? '✓' : '✗'}
-                            </span>
-                            <span>{stripTajweedMarkers(item.text)}</span>
+                            {words.map((w, wIdx) => (
+                              <span key={`l${line.lineNumber}_res_w_${itemIdx}_${wIdx}`}>
+                                <span className="mushaf-word inline select-text">
+                                  {stripTajweedMarkers(w)}
+                                </span>
+                                {wIdx < words.length - 1 && ' '}
+                              </span>
+                            ))}
                           </span>
                           {!isLastItem && ' '}
                         </React.Fragment>

@@ -79,6 +79,14 @@ export type DifficultyLevel = 'easy' | 'medium' | 'hafiz';
 
 export type MushafTheme = 'parchment' | 'emerald' | 'midnight' | 'classic-white';
 
+export type PageMarginPreset = 'compact' | 'standard' | 'spacious' | 'custom';
+
+export interface PageMarginConfig {
+  preset: PageMarginPreset;
+  horizontalPadding: number; // in pixels, e.g. 12 to 48
+  verticalPadding: number;   // in pixels, e.g. 6 to 24
+}
+
 export type PageRenderMode = 'authentic-image' | 'digital-text';
 
 export type PageViewMode = 'single' | 'double';

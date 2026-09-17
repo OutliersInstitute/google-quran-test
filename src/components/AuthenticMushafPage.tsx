@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Ayah, BlankTarget, MushafTheme, QuranPageData, PageFifteenLine } from '../types';
+import { Ayah, BlankTarget, MushafTheme, QuranPageData, PageFifteenLine, PageMarginConfig } from '../types';
 import { formatPageIntoFifteenLines } from '../utils/fifteenLineEngine';
 import { Settings, Loader2, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 import { triggerHaptic } from '../utils/haptics';
@@ -13,6 +13,7 @@ interface AuthenticMushafPageProps {
   isAnswered?: boolean;
   isCorrect?: boolean;
   theme: MushafTheme;
+  pageMargins?: PageMarginConfig;
   onPlayAyahAudio?: (ayah: Ayah) => void;
   onSelectBlankId?: (blankId: string) => void;
   onSelectBlank?: (blankId: string) => void;
@@ -41,6 +42,7 @@ export const AuthenticMushafPage: React.FC<AuthenticMushafPageProps> = ({
   isAnswered = false,
   isCorrect = false,
   theme,
+  pageMargins,
   onPlayAyahAudio,
   onSelectBlankId,
   onSelectBlank,
@@ -106,10 +108,19 @@ export const AuthenticMushafPage: React.FC<AuthenticMushafPageProps> = ({
     'classic-white': 'filter contrast-[1.05]'
   }[theme];
 
+  // Dynamic margin padding style if configured
+  const pageMarginStyle: React.CSSProperties = pageMargins ? {
+    paddingLeft: `${Math.max(0, pageMargins.horizontalPadding - 10)}px`,
+    paddingRight: `${Math.max(0, pageMargins.horizontalPadding - 10)}px`,
+    paddingTop: `${pageMargins.verticalPadding}px`,
+    paddingBottom: `${pageMargins.verticalPadding}px`,
+  } : {};
+
   return (
     <div
       id={`authentic-mushaf-page-${pageNumber}`}
-      className={`relative w-full h-full max-h-full flex flex-col items-center justify-between transition-all duration-300 px-0 py-1 sm:py-1.5 ${themeContainerBg} rounded-xl sm:rounded-2xl overflow-hidden select-none`}
+      style={pageMarginStyle}
+      className={`relative w-full h-full max-h-full flex flex-col items-center justify-between transition-all duration-300 ${pageMargins ? '' : 'px-0 py-1 sm:py-1.5'} ${themeContainerBg} rounded-xl sm:rounded-2xl overflow-hidden select-none`}
     >
       {/* Top Floating Controls Bar */}
       <div 

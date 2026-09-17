@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BlankTarget, CarouselOption, Surah, DifficultyLevel } from '../types';
 import { 
-  Settings, CheckCircle2, XCircle, ArrowRight, Eye, EyeOff, 
-  Sparkles, CheckCheck, Play, Pause, ChevronLeft, ChevronRight, Volume2
+  Settings, CheckCircle2, XCircle, ArrowRight,
+  Sparkles, CheckCheck, Play, Pause, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { triggerHaptic } from '../utils/haptics';
@@ -28,6 +28,7 @@ interface MobileBottomCarouselProps {
   onOpenSettings: () => void;
   onOpenReview?: () => void;
   mistakesCount?: number;
+  showTranslation?: boolean;
 }
 
 export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
@@ -43,8 +44,8 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
   onPreviousPage,
   autoAdvance,
   onOpenSettings,
+  showTranslation = false,
 }) => {
-  const [showTranslations, setShowTranslations] = useState<boolean>(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isCountdownPaused, setIsCountdownPaused] = useState<boolean>(false);
   const [activeCarouselCardIndex, setActiveCarouselCardIndex] = useState<number>(0);
@@ -71,21 +72,46 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
   const handleScroll = () => {
     if (!carouselTrackRef.current) return;
     const track = carouselTrackRef.current;
-    const scrollLeft = track.scrollLeft;
-    const cardWidth = track.clientWidth * 0.75;
-    if (cardWidth > 0) {
-      const cardIdx = Math.round(scrollLeft / cardWidth);
-      setActiveCarouselCardIndex(Math.max(0, Math.min(options.length - 1, cardIdx)));
+    const cards = track.querySelectorAll('[data-option-card]');
+    if (cards.length > 0) {
+      const trackRect = track.getBoundingClientRect();
+      const trackCenter = trackRect.left + trackRect.width / 2;
+      let closestIdx = 0;
+      let minDistance = Infinity;
+      cards.forEach((card, idx) => {
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.left + rect.width / 2;
+        const dist = Math.abs(cardCenter - trackCenter);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestIdx = idx;
+        }
+      });
+      setActiveCarouselCardIndex(closestIdx);
+    } else {
+      const scrollLeft = track.scrollLeft;
+      const cardWidth = track.clientWidth * 0.75;
+      if (cardWidth > 0) {
+        const cardIdx = Math.round(scrollLeft / cardWidth);
+        setActiveCarouselCardIndex(Math.max(0, Math.min(options.length - 1, cardIdx)));
+      }
     }
   };
 
-  // Scroll to card index
+  // Scroll to card index with smooth centering
   const scrollToCard = (index: number) => {
     if (!carouselTrackRef.current) return;
     const track = carouselTrackRef.current;
-    const cardWidth = track.clientWidth * 0.75;
-    track.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
-    setActiveCarouselCardIndex(index);
+    const cards = track.querySelectorAll('[data-option-card]');
+    if (cards[index]) {
+      cards[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      setActiveCarouselCardIndex(index);
+      triggerHaptic('light');
+    } else {
+      const cardWidth = track.clientWidth * 0.75;
+      track.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
+      setActiveCarouselCardIndex(index);
+    }
   };
 
   // Auto-advance countdown on page completion
@@ -143,25 +169,19 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
     }
   };
 
-  // Section label in Arabic and English for Hafiz context
-  const portionLabel = activeTarget?.portionSection === 'start'
-    ? 'بِدَايَةُ الآيَةِ • Beginning'
-    : activeTarget?.portionSection === 'middle'
-    ? 'وَسَطُ الآيَةِ • Middle'
-    : activeTarget?.portionSection === 'end'
-    ? 'خَاتِمَةُ الآيَةِ • Ending'
-    : 'Portion';
-
   return (
     <div 
       id="mobile-bottom-carousel" 
       className="w-full flex flex-col bg-[#fcf9f2] dark:bg-[#181c20] border-t-2 border-amber-900/30 dark:border-amber-700/40 shadow-2xl rounded-t-2xl overflow-hidden flex-shrink-0 z-30 select-none"
     >
-      {/* 1. Sleek Top Bar: Blank Stepper + Ayah Ref + Quick Controls */}
-      <div className="flex items-center justify-between px-2.5 py-1 bg-amber-950/5 dark:bg-stone-900/80 border-b border-amber-900/15 flex-shrink-0 text-xs">
+      {/* 1. Sleek Top Bar: Blank Stepper + Page Numbers Toggle (Clean, zero overlap) */}
+      <div className="flex items-center justify-between px-2.5 sm:px-3 py-1.5 bg-amber-950/5 dark:bg-stone-900/80 border-b border-amber-900/15 flex-shrink-0 text-xs gap-2">
         
-        {/* Left: Blank Pills + Ayah Reference */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+        {/* Left: Blank Options Stepper */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 min-w-0 flex-1">
+          <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-amber-900/70 dark:text-amber-300/70 flex-shrink-0">
+            Blanks:
+          </span>
           {blankTargets.map((target, idx) => {
             const isActive = idx === activeBlankIndex;
             let btnClass = "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border-stone-300 dark:border-stone-700";
@@ -169,15 +189,15 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
             if (target.isAnswered) {
               if (target.isCorrect) {
                 btnClass = isActive 
-                  ? "bg-emerald-600 text-white border-emerald-700 font-bold shadow-xs" 
+                  ? "bg-emerald-600 text-white border-emerald-700 font-bold shadow-xs ring-1 ring-emerald-400" 
                   : "bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 font-bold";
               } else {
                 btnClass = isActive 
-                  ? "bg-rose-600 text-white border-rose-700 font-bold shadow-xs" 
+                  ? "bg-rose-600 text-white border-rose-700 font-bold shadow-xs ring-1 ring-rose-400" 
                   : "bg-rose-100 text-rose-900 border-rose-300 dark:bg-rose-950 dark:text-rose-300 font-bold";
               }
             } else if (isActive) {
-              btnClass = "bg-amber-800 text-white border-amber-900 shadow-xs font-bold";
+              btnClass = "bg-amber-800 text-white border-amber-900 shadow-xs font-bold ring-1 ring-amber-500/40";
             }
 
             return (
@@ -188,7 +208,7 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
                   triggerHaptic('light');
                   onSelectBlankIndex(idx);
                 }}
-                className={`px-2 py-0.5 rounded-lg text-xs font-sans border transition-all cursor-pointer flex items-center gap-0.5 whitespace-nowrap ${btnClass}`}
+                className={`px-2 py-0.5 rounded-lg text-xs font-sans border transition-all cursor-pointer flex items-center gap-0.5 whitespace-nowrap flex-shrink-0 ${btnClass}`}
                 title={`Blank ${idx + 1}`}
               >
                 <span>({idx + 1})</span>
@@ -198,71 +218,41 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
               </button>
             );
           })}
-
-          {activeTarget && (
-            <span className="text-[11px] font-sans font-bold text-amber-950 dark:text-amber-200 bg-amber-200/60 dark:bg-amber-900/40 px-2 py-0.5 rounded-md whitespace-nowrap">
-              Ayah {activeTarget.ayahNumberInSurah} <span className="text-[10px] font-normal opacity-80">({portionLabel})</span>
-            </span>
-          )}
         </div>
 
-        {/* Right: Quick Page Navigation & Tools */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        {/* Right: Page Numbers Toggle & Settings */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           
-          {/* Quick Page Flip buttons (RTL Quran order: Left/back arrow advances to Next Page, Right arrow goes to Previous Page) */}
-          <div className="flex items-center rounded-lg bg-amber-900/10 dark:bg-stone-800 p-0.5 border border-amber-900/20 text-[11px] font-bold">
+          {/* Quick Page Navigation Toggle */}
+          <div className="flex items-center rounded-xl bg-amber-900/10 dark:bg-stone-800 p-0.5 border border-amber-900/20 text-xs font-bold shadow-2xs">
             <button
+              id="mobile-next-page-header-btn"
               onClick={onNextPage}
               disabled={currentPageNumber >= 604}
-              className="p-1 text-amber-900 dark:text-amber-200 hover:bg-amber-900/10 rounded disabled:opacity-30 cursor-pointer"
+              className="p-1 px-1.5 text-amber-900 dark:text-amber-200 hover:bg-amber-900/10 rounded-lg disabled:opacity-30 cursor-pointer transition-colors"
               title="Next Page (Advance in RTL)"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
-            <span className="px-1 text-[10px] font-sans text-amber-950 dark:text-amber-100">
+            <span className="px-1.5 text-[11px] font-sans font-bold text-amber-950 dark:text-amber-100 whitespace-nowrap">
               P.{currentPageNumber}
             </span>
             <button
+              id="mobile-prev-page-header-btn"
               onClick={onPreviousPage}
               disabled={currentPageNumber <= 1}
-              className="p-1 text-amber-900 dark:text-amber-200 hover:bg-amber-900/10 rounded disabled:opacity-30 cursor-pointer"
+              className="p-1 px-1.5 text-amber-900 dark:text-amber-200 hover:bg-amber-900/10 rounded-lg disabled:opacity-30 cursor-pointer transition-colors"
               title="Previous Page (Return toward Page 1)"
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          {/* Audio Play Button */}
-          {activeTarget?.fullAyah?.audio && (
-            <button
-              onClick={() => onPlayAudio?.(activeTarget.fullAyah.audio)}
-              className="p-1 px-1.5 rounded-lg bg-amber-100 dark:bg-stone-800 text-amber-900 dark:text-amber-200 border border-amber-900/20 text-xs font-medium cursor-pointer"
-              title="Listen to recitation"
-            >
-              <Volume2 className="w-3.5 h-3.5" />
-            </button>
-          )}
-
-          {/* Translation Toggle */}
-          <button
-            id="mobile-toggle-trans-btn"
-            onClick={() => setShowTranslations(!showTranslations)}
-            className={`p-1 px-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer flex items-center gap-0.5 ${
-              showTranslations 
-                ? 'bg-amber-800 text-white border-amber-800' 
-                : 'bg-amber-100/70 dark:bg-stone-800 text-amber-950 dark:text-amber-200 border-amber-900/20'
-            }`}
-            title="Toggle English Translation"
-          >
-            {showTranslations ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-            <span className="text-[10px] font-sans font-bold">EN</span>
-          </button>
-
-          {/* Settings Trigger Icon (matching the sketch rosette/flower) */}
+          {/* Settings Trigger Icon */}
           <button
             id="mobile-open-settings-btn"
             onClick={onOpenSettings}
-            className="p-1.5 rounded-lg bg-amber-800 hover:bg-amber-700 text-amber-100 border border-amber-700 shadow-xs cursor-pointer flex items-center justify-center transition-transform active:scale-95"
+            className="p-1.5 rounded-xl bg-amber-800 hover:bg-amber-700 text-amber-100 border border-amber-700 shadow-xs cursor-pointer flex items-center justify-center transition-transform active:scale-95 flex-shrink-0"
             title="Settings & Modes"
           >
             <Settings className="w-3.5 h-3.5" />
@@ -271,7 +261,7 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
 
       </div>
 
-      {/* 2. Main Horizontal Carousel Stage (as sketched: horizontal cards side-by-side) */}
+      {/* 2. Main Horizontal Carousel Stage with Prominent Side Navigation Arrows */}
       <div className="relative w-full py-2 px-1 flex flex-col justify-center min-h-[110px] max-h-[135px] overflow-hidden">
         {!activeTarget ? (
           <div className="p-4 text-center text-xs text-amber-900/70 dark:text-amber-300/70">
@@ -321,17 +311,17 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
             </div>
           </motion.div>
         ) : (
-          /* Horizontal Cards Carousel (The Sketch Layout) */
+          /* Horizontal Cards Carousel with Prominent Navigation Buttons */
           <div className="relative w-full flex items-center">
             
-            {/* Left Carousel Navigation Peek Button */}
+            {/* Prominent Left Carousel Navigation Button */}
             {activeCarouselCardIndex > 0 && (
               <button
                 onClick={() => scrollToCard(activeCarouselCardIndex - 1)}
-                className="absolute left-1 z-10 w-6 h-6 rounded-full bg-amber-950/70 text-white flex items-center justify-center shadow-md cursor-pointer backdrop-blur-xs transition-transform active:scale-90"
+                className="absolute left-1.5 z-20 w-9 h-9 rounded-full bg-amber-900/90 dark:bg-stone-800/95 text-amber-100 flex items-center justify-center shadow-lg border border-amber-700/50 cursor-pointer backdrop-blur-xs transition-all active:scale-90 hover:bg-amber-800"
                 title="Previous Option"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
               </button>
             )}
 
@@ -339,7 +329,7 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
             <div 
               ref={carouselTrackRef}
               onScroll={handleScroll}
-              className="w-full flex flex-row gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory px-3 py-1 items-stretch"
+              className="w-full flex flex-row gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory px-4 py-1 items-stretch"
             >
               {options.map((option, idx) => {
                 const isSelected = Boolean(
@@ -367,10 +357,11 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
                 return (
                   <button
                     key={option.id}
+                    data-option-card="true"
                     id={`mobile-option-card-${idx}`}
                     onClick={() => !activeTarget?.isAnswered && onSelectOption(option)}
                     disabled={activeTarget?.isAnswered}
-                    className={`relative w-[72vw] sm:w-[270px] max-w-[290px] min-w-[220px] flex-shrink-0 snap-center text-right p-2.5 rounded-2xl border-2 transition-all flex flex-col justify-between cursor-pointer select-none active:scale-98 ${cardStyle}`}
+                    className={`relative w-[74vw] sm:w-[280px] max-w-[300px] min-w-[220px] flex-shrink-0 snap-center text-right p-2.5 rounded-2xl border-2 transition-all flex flex-col justify-between cursor-pointer select-none active:scale-98 ${cardStyle}`}
                   >
                     {/* Top Row: Option Badge & Status Indicator */}
                     <div className="flex items-center justify-between w-full mb-1" dir="ltr">
@@ -399,7 +390,7 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
                       )}
                     </div>
 
-                    {/* Arabic Verse Option Text (Clean concise portion, fitting perfectly in card!) */}
+                    {/* Arabic Verse Option Text */}
                     <div 
                       className="font-quran text-base sm:text-lg font-bold leading-relaxed text-right w-full py-0.5 truncate"
                       dir="rtl"
@@ -408,8 +399,8 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
                       {option.text}
                     </div>
 
-                    {/* English translation if enabled */}
-                    {showTranslations && option.translation && (
+                    {/* English translation if enabled in Settings */}
+                    {showTranslation && option.translation && (
                       <div className="text-[10px] font-sans text-stone-600 dark:text-stone-300 text-left line-clamp-1 border-t border-amber-900/10 pt-0.5 mt-0.5" dir="ltr">
                         {option.translation}
                       </div>
@@ -426,14 +417,14 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
               })}
             </div>
 
-            {/* Right Carousel Navigation Peek Button */}
+            {/* Prominent Right Carousel Navigation Button */}
             {activeCarouselCardIndex < options.length - 1 && (
               <button
                 onClick={() => scrollToCard(activeCarouselCardIndex + 1)}
-                className="absolute right-1 z-10 w-6 h-6 rounded-full bg-amber-950/70 text-white flex items-center justify-center shadow-md cursor-pointer backdrop-blur-xs transition-transform active:scale-90"
+                className="absolute right-1.5 z-20 w-9 h-9 rounded-full bg-amber-900/90 dark:bg-stone-800/95 text-amber-100 flex items-center justify-center shadow-lg border border-amber-700/50 cursor-pointer backdrop-blur-xs transition-all active:scale-90 hover:bg-amber-800"
                 title="Next Option"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-5 h-5 stroke-[2.5]" />
               </button>
             )}
 
@@ -441,40 +432,78 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
         )}
       </div>
 
-      {/* 3. Bottom Carousel Footer: Carousel Indicators + Advance Action Button */}
-      <div className="flex items-center justify-between px-3 py-1 bg-amber-950/5 dark:bg-stone-900/70 border-t border-amber-900/15 flex-shrink-0">
+      {/* 3. Bottom Carousel Footer: Ergonomic Thumb Controls for Reachable Option Navigation */}
+      <div className="flex items-center justify-between px-2.5 sm:px-3 py-1.5 bg-amber-950/5 dark:bg-stone-900/90 border-t border-amber-900/15 flex-shrink-0 gap-2">
         
-        {/* Card Dots Indicator */}
-        <div className="flex items-center gap-1.5">
-          {options.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                triggerHaptic('light');
-                scrollToCard(idx);
-              }}
-              className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
-                idx === activeCarouselCardIndex 
-                  ? 'w-4 bg-amber-800 dark:bg-amber-400' 
-                  : 'bg-stone-300 dark:bg-stone-600 hover:bg-amber-600'
-              }`}
-              title={`Option ${['A', 'B', 'C', 'D'][idx]}`}
-            />
-          ))}
-          <span className="text-[10px] font-sans text-stone-500 dark:text-stone-400 ml-1">
-            {activeCarouselCardIndex + 1}/{options.length}
-          </span>
+        {/* Left Thumb Action: Previous Option Button */}
+        <button
+          id="mobile-carousel-prev-btn"
+          onClick={() => scrollToCard(Math.max(0, activeCarouselCardIndex - 1))}
+          disabled={activeCarouselCardIndex === 0}
+          className="min-h-[38px] px-3 rounded-xl font-bold text-xs flex items-center gap-1 transition-all cursor-pointer border shadow-2xs active:scale-95 disabled:opacity-25 disabled:pointer-events-none bg-white dark:bg-stone-800 text-amber-950 dark:text-amber-100 border-amber-900/20 hover:bg-amber-50 dark:hover:bg-stone-700"
+          title="Previous Option"
+        >
+          <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+          <span>Prev</span>
+        </button>
+
+        {/* Center: Interactive Option Letter Jump Buttons (A, B, C, D) */}
+        <div className="flex items-center gap-1 bg-amber-900/10 dark:bg-stone-800/90 p-1 rounded-xl border border-amber-900/15">
+          {options.map((opt, idx) => {
+            const isCardActive = idx === activeCarouselCardIndex;
+            const letter = ['A', 'B', 'C', 'D'][idx] || `${idx + 1}`;
+            let pillClass = "bg-transparent text-amber-950 dark:text-amber-200 hover:bg-amber-900/20";
+            
+            if (activeTarget?.isAnswered) {
+              if (opt.isCorrect) {
+                pillClass = isCardActive 
+                  ? "bg-emerald-600 text-white font-black shadow-xs ring-2 ring-emerald-400" 
+                  : "bg-emerald-600/80 text-white font-bold";
+              } else if (activeTarget.selectedOption?.id === opt.id) {
+                pillClass = isCardActive 
+                  ? "bg-rose-600 text-white font-black shadow-xs ring-2 ring-rose-400" 
+                  : "bg-rose-600/80 text-white font-bold";
+              } else if (isCardActive) {
+                pillClass = "bg-amber-800 text-white font-bold shadow-xs";
+              }
+            } else if (isCardActive) {
+              pillClass = "bg-amber-800 text-white font-bold shadow-xs";
+            }
+
+            return (
+              <button
+                key={opt.id}
+                id={`mobile-quick-option-${idx}`}
+                onClick={() => scrollToCard(idx)}
+                className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center active:scale-90 ${pillClass}`}
+                title={`Jump to Option ${letter}`}
+              >
+                {letter}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Action Button: Next Blank or Next Page */}
-        {activeTarget?.isAnswered && (
+        {/* Right Thumb Action: Next Option OR Next Blank if Answered */}
+        {activeTarget?.isAnswered ? (
           <button
             id="mobile-advance-blank-btn"
             onClick={handleAdvance}
-            className="py-1 px-3.5 rounded-xl bg-amber-800 hover:bg-amber-700 text-amber-50 font-bold text-xs shadow-xs transition-transform active:scale-95 flex items-center gap-1 cursor-pointer"
+            className="min-h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-amber-800 to-amber-900 hover:from-amber-700 hover:to-amber-800 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
           >
             <span>{activeBlankIndex < totalBlanks - 1 ? 'Next Blank' : 'Next Page'}</span>
-            <ArrowRight className="w-3.5 h-3.5 text-amber-300" />
+            <ArrowRight className="w-4 h-4 text-amber-300 stroke-[2.5]" />
+          </button>
+        ) : (
+          <button
+            id="mobile-carousel-next-btn"
+            onClick={() => scrollToCard(Math.min(options.length - 1, activeCarouselCardIndex + 1))}
+            disabled={activeCarouselCardIndex >= options.length - 1}
+            className="min-h-[38px] px-3 rounded-xl font-bold text-xs flex items-center gap-1 transition-all cursor-pointer border shadow-2xs active:scale-95 disabled:opacity-25 disabled:pointer-events-none bg-amber-800 hover:bg-amber-700 text-amber-50 border-amber-900"
+            title="Next Option"
+          >
+            <span>Next</span>
+            <ChevronRight className="w-4 h-4 stroke-[2.5]" />
           </button>
         )}
 
