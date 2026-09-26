@@ -366,6 +366,8 @@ export function getBaseFifteenLines(
   // If exact template exists for this page
   if (EXACT_MEDINA_PAGES[pageNumber]) {
     const template = EXACT_MEDINA_PAGES[pageNumber];
+    const wordCounterMap = new Map<number, number>();
+
     return template.map(line => {
       if (line.type === 'surah-banner') {
         return {
@@ -381,8 +383,6 @@ export function getBaseFifteenLines(
           rawText: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ'
         };
       }
-
-      const wordCounterMap = new Map<number, number>();
 
       const items: PageLineItem[] = line.tokens.map(t => {
         let wordIndexInAyah: number | undefined;
@@ -720,37 +720,37 @@ export function formatPageIntoFifteenLines(
       }
 
       if (item.type === 'word' && item.ayahNumberInSurah) {
-        const matchedBlank = blanks.find(
-          b => b.ayahNumberInSurah === item.ayahNumberInSurah &&
-            (b.fullAyah.surahNumber === undefined || item.fullAyah?.surahNumber === undefined || b.fullAyah.surahNumber === item.fullAyah.surahNumber)
-        );
+        // Find which blank covers this specific word in the ayah
+        const matchedBlank = blanks.find(b => {
+          if (b.ayahNumberInSurah !== item.ayahNumberInSurah) return false;
+          if (b.fullAyah.surahNumber !== undefined && item.fullAyah?.surahNumber !== undefined && b.fullAyah.surahNumber !== item.fullAyah.surahNumber) return false;
+
+          // If blank specifies hiddenWordIndices, match only if this word's index is covered
+          if (b.hiddenWordIndices && b.hiddenWordIndices.length > 0) {
+            if (item.wordIndexInAyah !== undefined) {
+              return b.hiddenWordIndices.includes(item.wordIndexInAyah);
+            }
+          }
+
+          // Fallback if hiddenWordIndices not set: check portion prefix/suffix
+          if (b.hiddenType === 'portion') {
+            const visiblePrefixWords = (b.visiblePrefix || '').trim().split(/\s+/).filter(Boolean);
+            const visibleSuffixWords = (b.visibleSuffix || '').trim().split(/\s+/).filter(Boolean);
+            const wordText = item.text || '';
+            if (visiblePrefixWords.includes(wordText) || visibleSuffixWords.includes(wordText)) {
+              return false;
+            }
+            return true;
+          }
+
+          // Full ayah challenge
+          return true;
+        });
 
         if (!matchedBlank) {
           flushPendingBlank();
           transformedItems.push(item);
           return;
-        }
-
-        // Check if portion challenge and this word is part of visible prefix or suffix
-        if (matchedBlank.hiddenType === 'portion') {
-          if (matchedBlank.hiddenWordIndices && matchedBlank.hiddenWordIndices.length > 0) {
-            const isHidden = item.wordIndexInAyah !== undefined && matchedBlank.hiddenWordIndices.includes(item.wordIndexInAyah);
-            if (!isHidden) {
-              flushPendingBlank();
-              transformedItems.push(item);
-              return;
-            }
-          } else {
-            const visiblePrefixWords = (matchedBlank.visiblePrefix || '').trim().split(/\s+/).filter(Boolean);
-            const visibleSuffixWords = (matchedBlank.visibleSuffix || '').trim().split(/\s+/).filter(Boolean);
-            const wordText = item.text || '';
-
-            if (visiblePrefixWords.includes(wordText) || visibleSuffixWords.includes(wordText)) {
-              flushPendingBlank();
-              transformedItems.push(item);
-              return;
-            }
-          }
         }
 
         // Word is hidden as part of this blank target
@@ -1223,153 +1223,377 @@ function generateTrickyDistractors(
 
 /**
  * Creates multiple blank targets on the specified page based on requested count.
- * Fully supports multi-section portion blanking ('start', 'middle', 'end') and tricky Hafiz distractors.
+ * Fully supports multiple blanks in long ayahs (beginning, middle, and conclusion clauses),
+ * multi-section portion blanking ('start', 'middle', 'end'), and tricky Hafiz distractors.
  */
 export function createPageBlankTargets(
   pageAyahs: Ayah[],
   primarySurah: Surah,
-  requestedCount: number = 1,
+  requestedCount: number | 'all' = 1,
   challengeType: ChallengeType = 'full-ayah',
   difficulty: DifficultyLevel = 'medium',
   pageNumberOverride?: number,
-  startingIndex: number = 1
+  startingIndex: number = 1,
+  allowMultiBlanksPerAyah: boolean = true
 ): BlankTarget[] {
   if (!pageAyahs || pageAyahs.length === 0) return [];
 
   const targetPageNum = pageNumberOverride || pageAyahs[0]?.page || 1;
-  const actualCount = Math.max(1, Math.min(requestedCount, pageAyahs.length));
-  const availableIndices = pageAyahs.map((_, idx) => idx);
-  const shuffledIndices = [...availableIndices].sort(() => Math.random() - 0.5);
-  const selectedIndices = shuffledIndices.slice(0, actualCount).sort((a, b) => a - b);
-
-  // Available sections for portion mode: cycle through start, middle, end for rich variety
+  const optionsCount = difficulty === 'easy' ? 3 : 4;
   const SECTION_ROTATION: ('start' | 'middle' | 'end')[] = ['start', 'middle', 'end'];
 
-  return selectedIndices.map((targetIndex, bIdx) => {
-    const globalBlankIndex = startingIndex + bIdx;
-    const targetAyah = pageAyahs[targetIndex];
-    const words = targetAyah.text.trim().split(/\s+/).filter(Boolean);
+  // Map each ayah index to its word count and blank capacity
+  const ayahCapacities = pageAyahs.map((ayah) => {
+    const words = ayah.text.trim().split(/\s+/).filter(Boolean);
     const N = words.length;
+    let maxBlanks = 1;
+    if (allowMultiBlanksPerAyah) {
+      if (N >= 18) maxBlanks = 3;
+      else if (N >= 7) maxBlanks = 2;
+    }
+    return { words, N, maxBlanks };
+  });
 
-    let hiddenType: 'full' | 'portion' = 'full';
-    let portionSection: 'start' | 'middle' | 'end' | undefined;
-    let hiddenWordIndices: number[] | undefined;
-    let visiblePrefix: string | undefined;
-    let hiddenText = targetAyah.text;
-    let visibleSuffix: string | undefined;
+  // Calculate allocations per ayah (ayahIndex -> blankCount)
+  const allocations = new Map<number, number>();
 
-    if (challengeType === 'portion-ayah') {
-      hiddenType = 'portion';
-      // Pick section: rotate across blanks or pick randomly
-      portionSection = SECTION_ROTATION[bIdx % SECTION_ROTATION.length];
+  if (requestedCount === 'all') {
+    // In 'all' mode:
+    // If allowMultiBlanksPerAyah is on, give long ayahs 2 (or 3) blanks, and shorter ayahs 1 blank
+    pageAyahs.forEach((_, idx) => {
+      allocations.set(idx, ayahCapacities[idx].maxBlanks);
+    });
+  } else {
+    const targetTotal = Math.max(1, typeof requestedCount === 'number' ? requestedCount : 1);
+    pageAyahs.forEach((_, idx) => allocations.set(idx, 0));
 
-      if (N <= 2) {
-        // Very short ayah: hide single word portion
-        const hideIdx = portionSection === 'start' ? 0 : N - 1;
-        hiddenWordIndices = [hideIdx];
-        if (hideIdx === 0) {
-          visiblePrefix = undefined;
-          hiddenText = words[0];
-          visibleSuffix = words.slice(1).join(' ');
-        } else {
-          visiblePrefix = words.slice(0, hideIdx).join(' ');
-          hiddenText = words[hideIdx];
-          visibleSuffix = undefined;
-        }
-      } else if (portionSection === 'start') {
-        // Blank beginning section (concise 2 to 3 words)
-        const splitIndex = Math.min(3, Math.max(2, Math.min(N - 1, 3)));
-        hiddenWordIndices = Array.from({ length: splitIndex }, (_, i) => i);
-        visiblePrefix = undefined;
-        hiddenText = words.slice(0, splitIndex).join(' ');
-        visibleSuffix = words.slice(splitIndex).join(' ');
-      } else if (portionSection === 'middle' && N >= 4) {
-        // Blank middle section (concise 2 to 3 words in the middle)
-        const portionLength = Math.min(3, Math.max(2, Math.min(N - 2, 3)));
-        const middlePivot = Math.floor(N / 2);
-        const startIdx = Math.max(1, Math.min(N - portionLength - 1, middlePivot - Math.floor(portionLength / 2)));
-        const endIdx = startIdx + portionLength;
-        hiddenWordIndices = Array.from({ length: portionLength }, (_, i) => startIdx + i);
-        visiblePrefix = words.slice(0, startIdx).join(' ');
-        hiddenText = words.slice(startIdx, endIdx).join(' ');
-        visibleSuffix = words.slice(endIdx).join(' ');
-      } else {
-        // Blank ending clause (concise 2 to 3 words at end)
-        portionSection = 'end';
-        const portionLength = Math.min(3, Math.max(2, Math.min(N - 1, 3)));
-        const splitIndex = N - portionLength;
-        hiddenWordIndices = Array.from({ length: portionLength }, (_, i) => splitIndex + i);
-        visiblePrefix = words.slice(0, splitIndex).join(' ');
-        hiddenText = words.slice(splitIndex).join(' ');
-        visibleSuffix = undefined;
+    let currentTotal = 0;
+    const allAyahIndices = pageAyahs.map((_, idx) => idx);
+    const shuffledAyahIndices = [...allAyahIndices].sort(() => Math.random() - 0.5);
+
+    // If requestedCount >= 2 and allowMultiBlanksPerAyah, prioritize assigning 2 blanks to at least one long ayah
+    if (allowMultiBlanksPerAyah && targetTotal >= 2) {
+      const longAyahIndices = shuffledAyahIndices.filter(i => ayahCapacities[i].maxBlanks >= 2);
+      if (longAyahIndices.length > 0) {
+        const primaryLong = longAyahIndices[0];
+        allocations.set(primaryLong, 2);
+        currentTotal += 2;
       }
     }
 
-    // Number of options: Hafiz has 4 tricky mutashabihat options, Medium 4, Easy 3
-    const optionsCount = difficulty === 'easy' ? 3 : 4;
-    const options: CarouselOption[] = [];
-
-    // Explanation description
-    let correctExplanation = `Authentic text of Ayah ${targetAyah.numberInSurah}`;
-    if (portionSection === 'start') {
-      correctExplanation = `Authentic beginning of Ayah ${targetAyah.numberInSurah}`;
-    } else if (portionSection === 'middle') {
-      correctExplanation = `Authentic middle clause of Ayah ${targetAyah.numberInSurah}`;
-    } else if (portionSection === 'end') {
-      correctExplanation = `Authentic conclusion of Ayah ${targetAyah.numberInSurah}`;
+    // Distribute remaining blanks:
+    // 1. Give 1 blank to other unallocated ayahs
+    for (const idx of shuffledAyahIndices) {
+      if (currentTotal >= targetTotal) break;
+      const current = allocations.get(idx) || 0;
+      if (current === 0) {
+        allocations.set(idx, 1);
+        currentTotal += 1;
+      }
     }
 
-    const correctOption: CarouselOption = {
-      id: `opt_correct_${globalBlankIndex}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      text: hiddenText,
-      translation: targetAyah.translation,
-      isCorrect: true,
-      surahReference: `Ayah ${targetAyah.numberInSurah}`,
-      explanation: correctExplanation,
-      audio: targetAyah.audio
-    };
+    // 2. If still need more blanks, increase allocation on long ayahs up to their maxBlanks
+    if (currentTotal < targetTotal && allowMultiBlanksPerAyah) {
+      for (const idx of shuffledAyahIndices) {
+        if (currentTotal >= targetTotal) break;
+        const current = allocations.get(idx) || 0;
+        const cap = ayahCapacities[idx].maxBlanks;
+        if (current < cap) {
+          const add = Math.min(cap - current, targetTotal - currentTotal);
+          allocations.set(idx, current + add);
+          currentTotal += add;
+        }
+      }
+    }
 
-    options.push(correctOption);
+    // Safety fallback: ensure at least one blank is assigned
+    if (currentTotal === 0 && pageAyahs.length > 0) {
+      allocations.set(0, 1);
+    }
+  }
 
-    // Generate intelligent, tricky distractors
-    const trickyDistractors = generateTrickyDistractors(
-      hiddenText,
-      targetAyah,
-      pageAyahs,
-      primarySurah,
-      difficulty,
-      portionSection,
-      optionsCount - 1
-    );
+  // Generate blank targets in reading order across ayahs
+  const results: BlankTarget[] = [];
+  let currentBlankNum = startingIndex;
 
-    trickyDistractors.forEach((cand, i) => {
-      options.push({
-        id: `opt_distractor_${globalBlankIndex}_${i}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        text: cand.text,
-        isCorrect: false,
-        explanation: cand.explanation || (difficulty === 'hafiz' ? 'Mutashabih distractor' : 'Quranic distractor')
+  for (let ayahIdx = 0; ayahIdx < pageAyahs.length; ayahIdx++) {
+    const blankCountForAyah = allocations.get(ayahIdx) || 0;
+    if (blankCountForAyah <= 0) continue;
+
+    const targetAyah = pageAyahs[ayahIdx];
+    const { words, N } = ayahCapacities[ayahIdx];
+
+    interface SubBlankDef {
+      partIndex?: number;
+      totalParts?: number;
+      label?: string;
+      hiddenType: 'full' | 'portion';
+      portionSection?: 'start' | 'middle' | 'end';
+      hiddenWordIndices: number[];
+      visiblePrefix?: string;
+      hiddenText: string;
+      visibleSuffix?: string;
+    }
+
+    const subDefs: SubBlankDef[] = [];
+
+    if (blankCountForAyah === 1) {
+      // Single blank on this ayah
+      if (challengeType === 'portion-ayah') {
+        const portionSection = SECTION_ROTATION[(currentBlankNum - 1) % SECTION_ROTATION.length];
+        if (N <= 2) {
+          const hideIdx = portionSection === 'start' ? 0 : N - 1;
+          subDefs.push({
+            hiddenType: 'portion',
+            portionSection,
+            hiddenWordIndices: [hideIdx],
+            visiblePrefix: hideIdx === 0 ? undefined : words.slice(0, hideIdx).join(' '),
+            hiddenText: words[hideIdx],
+            visibleSuffix: hideIdx === 0 ? words.slice(1).join(' ') : undefined
+          });
+        } else if (portionSection === 'start') {
+          const splitIndex = Math.min(3, Math.max(2, Math.min(N - 1, 3)));
+          subDefs.push({
+            hiddenType: 'portion',
+            portionSection: 'start',
+            hiddenWordIndices: Array.from({ length: splitIndex }, (_, i) => i),
+            visiblePrefix: undefined,
+            hiddenText: words.slice(0, splitIndex).join(' '),
+            visibleSuffix: words.slice(splitIndex).join(' ')
+          });
+        } else if (portionSection === 'middle' && N >= 4) {
+          const portionLength = Math.min(3, Math.max(2, Math.min(N - 2, 3)));
+          const middlePivot = Math.floor(N / 2);
+          const startIdx = Math.max(1, Math.min(N - portionLength - 1, middlePivot - Math.floor(portionLength / 2)));
+          const endIdx = startIdx + portionLength;
+          subDefs.push({
+            hiddenType: 'portion',
+            portionSection: 'middle',
+            hiddenWordIndices: Array.from({ length: portionLength }, (_, i) => startIdx + i),
+            visiblePrefix: words.slice(0, startIdx).join(' '),
+            hiddenText: words.slice(startIdx, endIdx).join(' '),
+            visibleSuffix: words.slice(endIdx).join(' ')
+          });
+        } else {
+          const portionLength = Math.min(3, Math.max(2, Math.min(N - 1, 3)));
+          const splitIndex = N - portionLength;
+          subDefs.push({
+            hiddenType: 'portion',
+            portionSection: 'end',
+            hiddenWordIndices: Array.from({ length: portionLength }, (_, i) => splitIndex + i),
+            visiblePrefix: words.slice(0, splitIndex).join(' '),
+            hiddenText: words.slice(splitIndex).join(' '),
+            visibleSuffix: undefined
+          });
+        }
+      } else {
+        // Full ayah challenge
+        subDefs.push({
+          hiddenType: 'full',
+          hiddenWordIndices: Array.from({ length: N }, (_, i) => i),
+          visiblePrefix: undefined,
+          hiddenText: targetAyah.text,
+          visibleSuffix: undefined
+        });
+      }
+    } else if (blankCountForAyah === 2) {
+      // 2 blanks in this long ayah!
+      if (challengeType === 'portion-ayah' || N >= 8) {
+        // Part 1: Beginning clause
+        const L1 = Math.min(3, Math.max(2, Math.floor(N * 0.3)));
+        const part1Indices = Array.from({ length: L1 }, (_, i) => i);
+        const part1Text = words.slice(0, L1).join(' ');
+        const part1Suffix = words.slice(L1).join(' ');
+
+        subDefs.push({
+          partIndex: 1,
+          totalParts: 2,
+          label: 'Beginning',
+          hiddenType: 'portion',
+          portionSection: 'start',
+          hiddenWordIndices: part1Indices,
+          visiblePrefix: undefined,
+          hiddenText: part1Text,
+          visibleSuffix: part1Suffix
+        });
+
+        // Part 2: Ending clause
+        const L2 = Math.min(3, Math.max(2, Math.floor(N * 0.3)));
+        const startIdx2 = Math.max(L1, N - L2);
+        const len2 = N - startIdx2;
+        const part2Indices = Array.from({ length: len2 }, (_, i) => startIdx2 + i);
+        const part2Prefix = words.slice(0, startIdx2).join(' ');
+        const part2Text = words.slice(startIdx2).join(' ');
+
+        subDefs.push({
+          partIndex: 2,
+          totalParts: 2,
+          label: 'Conclusion',
+          hiddenType: 'portion',
+          portionSection: 'end',
+          hiddenWordIndices: part2Indices,
+          visiblePrefix: part2Prefix,
+          hiddenText: part2Text,
+          visibleSuffix: undefined
+        });
+      } else {
+        // Full ayah split in 2 halves
+        const M = Math.floor(N / 2);
+        subDefs.push({
+          partIndex: 1,
+          totalParts: 2,
+          label: 'First Half',
+          hiddenType: 'portion',
+          portionSection: 'start',
+          hiddenWordIndices: Array.from({ length: M }, (_, i) => i),
+          visiblePrefix: undefined,
+          hiddenText: words.slice(0, M).join(' '),
+          visibleSuffix: words.slice(M).join(' ')
+        });
+        subDefs.push({
+          partIndex: 2,
+          totalParts: 2,
+          label: 'Second Half',
+          hiddenType: 'portion',
+          portionSection: 'end',
+          hiddenWordIndices: Array.from({ length: N - M }, (_, i) => M + i),
+          visiblePrefix: words.slice(0, M).join(' '),
+          hiddenText: words.slice(M).join(' '),
+          visibleSuffix: undefined
+        });
+      }
+    } else {
+      // 3 blanks in this long ayah (Start, Middle, Conclusion)
+      const L1 = Math.min(3, Math.max(2, Math.floor(N / 5)));
+      const part1Indices = Array.from({ length: L1 }, (_, i) => i);
+      subDefs.push({
+        partIndex: 1,
+        totalParts: 3,
+        label: 'Beginning',
+        hiddenType: 'portion',
+        portionSection: 'start',
+        hiddenWordIndices: part1Indices,
+        visiblePrefix: undefined,
+        hiddenText: words.slice(0, L1).join(' '),
+        visibleSuffix: words.slice(L1).join(' ')
+      });
+
+      const L2 = Math.min(3, Math.max(2, Math.floor(N / 5)));
+      const midStart = Math.max(L1 + 1, Math.floor((N - L2) / 2));
+      const midEnd = midStart + L2;
+      const part2Indices = Array.from({ length: L2 }, (_, i) => midStart + i);
+      subDefs.push({
+        partIndex: 2,
+        totalParts: 3,
+        label: 'Middle Clause',
+        hiddenType: 'portion',
+        portionSection: 'middle',
+        hiddenWordIndices: part2Indices,
+        visiblePrefix: words.slice(0, midStart).join(' '),
+        hiddenText: words.slice(midStart, midEnd).join(' '),
+        visibleSuffix: words.slice(midEnd).join(' ')
+      });
+
+      const L3 = Math.min(3, Math.max(2, Math.floor(N / 5)));
+      const endStart = Math.max(midEnd + 1, N - L3);
+      const len3 = N - endStart;
+      const part3Indices = Array.from({ length: len3 }, (_, i) => endStart + i);
+      subDefs.push({
+        partIndex: 3,
+        totalParts: 3,
+        label: 'Conclusion',
+        hiddenType: 'portion',
+        portionSection: 'end',
+        hiddenWordIndices: part3Indices,
+        visiblePrefix: words.slice(0, endStart).join(' '),
+        hiddenText: words.slice(endStart).join(' '),
+        visibleSuffix: undefined
+      });
+    }
+
+    // Now turn each sub-def into a BlankTarget
+    subDefs.forEach(def => {
+      const globalBlankIndex = currentBlankNum++;
+
+      // Formulate explanation
+      let correctExplanation = `Authentic text of Ayah ${targetAyah.numberInSurah}`;
+      if (def.label) {
+        correctExplanation = `Authentic text of Ayah ${targetAyah.numberInSurah} (${def.label})`;
+      } else if (def.portionSection === 'start') {
+        correctExplanation = `Authentic beginning of Ayah ${targetAyah.numberInSurah}`;
+      } else if (def.portionSection === 'middle') {
+        correctExplanation = `Authentic middle clause of Ayah ${targetAyah.numberInSurah}`;
+      } else if (def.portionSection === 'end') {
+        correctExplanation = `Authentic conclusion of Ayah ${targetAyah.numberInSurah}`;
+      }
+
+      let surahRef = `Ayah ${targetAyah.numberInSurah}`;
+      if (def.partIndex && def.totalParts) {
+        surahRef = `Ayah ${targetAyah.numberInSurah} (${def.partIndex}/${def.totalParts})`;
+      }
+
+      const correctOption: CarouselOption = {
+        id: `opt_correct_${globalBlankIndex}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        text: def.hiddenText,
+        translation: targetAyah.translation,
+        isCorrect: true,
+        surahReference: surahRef,
+        explanation: correctExplanation,
+        audio: targetAyah.audio
+      };
+
+      const options: CarouselOption[] = [correctOption];
+
+      const trickyDistractors = generateTrickyDistractors(
+        def.hiddenText,
+        targetAyah,
+        pageAyahs,
+        primarySurah,
+        difficulty,
+        def.portionSection,
+        optionsCount - 1
+      );
+
+      trickyDistractors.forEach((cand, i) => {
+        options.push({
+          id: `opt_distractor_${globalBlankIndex}_${i}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          text: cand.text,
+          isCorrect: false,
+          explanation: cand.explanation || (difficulty === 'hafiz' ? 'Mutashabih distractor' : 'Quranic distractor')
+        });
+      });
+
+      const shuffledOptions = options.sort(() => Math.random() - 0.5);
+
+      const targetId = def.partIndex
+        ? `blank_p${targetPageNum}_a${targetAyah.number}_sub${def.partIndex}_${globalBlankIndex}_${Date.now()}`
+        : `blank_p${targetPageNum}_a${targetAyah.number}_${globalBlankIndex}_${Date.now()}`;
+
+      results.push({
+        id: targetId,
+        blankIndex: globalBlankIndex,
+        pageNumber: targetPageNum,
+        ayahIndex: ayahIdx,
+        ayahNumberInSurah: targetAyah.numberInSurah,
+        fullAyah: targetAyah,
+        subAyahPart: def.partIndex && def.totalParts ? {
+          partIndex: def.partIndex,
+          totalParts: def.totalParts,
+          label: def.label
+        } : undefined,
+        hiddenType: def.hiddenType,
+        portionSection: def.portionSection,
+        hiddenWordIndices: def.hiddenWordIndices,
+        visiblePrefix: def.visiblePrefix,
+        hiddenText: def.hiddenText,
+        visibleSuffix: def.visibleSuffix,
+        options: shuffledOptions,
+        correctOptionId: correctOption.id
       });
     });
+  }
 
-    const shuffledOptions = options.sort(() => Math.random() - 0.5);
-
-    return {
-      id: `blank_p${targetPageNum}_a${targetAyah.number}_${globalBlankIndex}_${Date.now()}`,
-      blankIndex: globalBlankIndex,
-      pageNumber: targetPageNum,
-      ayahIndex: targetIndex,
-      ayahNumberInSurah: targetAyah.numberInSurah,
-      fullAyah: targetAyah,
-      hiddenType,
-      portionSection,
-      hiddenWordIndices,
-      visiblePrefix,
-      hiddenText,
-      visibleSuffix,
-      options: shuffledOptions,
-      correctOptionId: correctOption.id
-    };
-  });
+  return results;
 }
 
 /**

@@ -2,10 +2,10 @@ import React from 'react';
 import { 
   X, Settings, Sparkles, Layers, Sliders, Volume2, VolumeX, Eye, EyeOff, 
   RotateCcw, Shuffle, BookOpen, Bookmark, HelpCircle, Check, ArrowRight, 
-  Zap, Palette, ShieldAlert, Award, Compass, FileText, Smartphone, Maximize2
+  Zap, Palette, ShieldAlert, Award, Compass, FileText, Smartphone, Maximize2, Target
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChallengeType, DifficultyLevel, MushafTheme, PageViewMode, PageRenderMode, Surah, PageRangeConfig, PageMarginConfig, PageMarginPreset } from '../types';
+import { ChallengeType, DifficultyLevel, MushafTheme, PageViewMode, PageRenderMode, Surah, PageRangeConfig, PageMarginConfig, PageMarginPreset, DailyTargetConfig, GoalProgressSummary } from '../types';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -40,6 +40,9 @@ interface SettingsModalProps {
   onToggleAutoAdvance: () => void;
   autoAdvanceOnCorrect?: boolean;
   onToggleAutoAdvanceOnCorrect?: () => void;
+  // Multiple blanks in long ayahs
+  allowMultiBlanksPerAyah?: boolean;
+  onToggleMultiBlanksPerAyah?: () => void;
   // Theme
   theme: MushafTheme;
   onChangeTheme: (theme: MushafTheme) => void;
@@ -50,6 +53,10 @@ interface SettingsModalProps {
   onOpenPagePicker: () => void;
   onOpenReview: () => void;
   onOpenHowToPlay: () => void;
+  // Daily Target
+  dailyTarget?: DailyTargetConfig;
+  goalSummary?: GoalProgressSummary | null;
+  onOpenDailyTarget?: () => void;
   // Stats & Info
   currentSurah: Surah;
   currentPageNumber: number;
@@ -85,6 +92,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onToggleAutoAdvance,
   autoAdvanceOnCorrect = true,
   onToggleAutoAdvanceOnCorrect,
+  allowMultiBlanksPerAyah = true,
+  onToggleMultiBlanksPerAyah,
   theme,
   onChangeTheme,
   onShuffleNewBlanks,
@@ -93,6 +102,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpenPagePicker,
   onOpenReview,
   onOpenHowToPlay,
+  dailyTarget,
+  goalSummary,
+  onOpenDailyTarget,
   currentSurah,
   currentPageNumber,
   activeRange,
@@ -170,6 +182,51 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </button>
               </div>
             </div>
+
+            {/* Daily Memorization Target & Goal Card */}
+            {dailyTarget && (
+              <div className="p-3.5 rounded-2xl bg-amber-800/10 dark:bg-amber-950/40 border border-amber-800/25 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Target className="w-4 h-4 text-amber-700 dark:text-amber-400" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-amber-950 dark:text-amber-200 font-display">
+                      Daily Memorization Goal
+                    </span>
+                  </div>
+                  {goalSummary && (
+                    <span className="text-xs font-bold text-amber-900 dark:text-amber-300 font-mono">
+                      {goalSummary.formattedLabel} ({goalSummary.percent}%)
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-stone-800 dark:text-stone-200">
+                    {dailyTarget.title}
+                  </span>
+                  {onOpenDailyTarget && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onOpenDailyTarget();
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-amber-800 hover:bg-amber-700 text-white font-bold text-[11px] cursor-pointer shadow-xs active:scale-95 transition-all"
+                    >
+                      Set Target (Juz / Surah / Pages)
+                    </button>
+                  )}
+                </div>
+
+                {goalSummary && (
+                  <div className="w-full h-1.5 bg-amber-900/10 dark:bg-stone-700 rounded-full overflow-hidden mt-0.5">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-600 to-amber-500 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.max(3, goalSummary.percent))}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* SECTION 1: Page Typography & Display Mode */}
             <div className="space-y-2">
@@ -435,6 +492,40 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   );
                 })}
               </div>
+
+              {/* Multi-Blank for Long Ayahs toggle */}
+              {onToggleMultiBlanksPerAyah && (
+                <div className="p-3 rounded-2xl bg-white dark:bg-stone-800 border border-amber-900/15 flex items-center justify-between mt-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-amber-900/10 text-amber-900 dark:text-amber-200">
+                      <Sparkles className="w-4 h-4 text-amber-700 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-xs flex items-center gap-1.5">
+                        <span>Multiple Blanks in Long Ayahs</span>
+                        <span className="text-[9px] font-bold bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 px-1.5 py-0.5 rounded-full">Active</span>
+                      </div>
+                      <div className="text-[10px] text-stone-500 dark:text-stone-400">
+                        Split long ayahs into multiple fill-in checkpoints (beginning, middle, and conclusion clauses)
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    id="settings-toggle-multiblanks-btn"
+                    onClick={onToggleMultiBlanksPerAyah}
+                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer flex-shrink-0 ${
+                      allowMultiBlanksPerAyah ? 'bg-amber-800' : 'bg-stone-300 dark:bg-stone-700'
+                    }`}
+                    title="Toggle multiple blanks per long ayah"
+                  >
+                    <span 
+                      className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                        allowMultiBlanksPerAyah ? 'transform translate-x-5' : ''
+                      }`} 
+                    />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* SECTION 4: Audio & Automation Toggles */}

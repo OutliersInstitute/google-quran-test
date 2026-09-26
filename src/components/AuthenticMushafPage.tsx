@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Ayah, BlankTarget, MushafTheme, QuranPageData, PageFifteenLine, PageMarginConfig } from '../types';
+import { Ayah, BlankTarget, MushafTheme, QuranPageData, PageFifteenLine, PageMarginConfig, GoalProgressSummary } from '../types';
 import { formatPageIntoFifteenLines } from '../utils/fifteenLineEngine';
 import { Settings, Loader2, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 import { triggerHaptic } from '../utils/haptics';
+import { MushafGoalProgressBar } from './MushafGoalProgressBar';
 
 interface AuthenticMushafPageProps {
   pageData: QuranPageData;
@@ -21,6 +22,8 @@ interface AuthenticMushafPageProps {
   mistakesCount?: number;
   showTranslation?: boolean;
   isSecondaryPage?: boolean;
+  goalSummary?: GoalProgressSummary | null;
+  onOpenDailyTarget?: () => void;
 }
 
 /**
@@ -49,7 +52,9 @@ export const AuthenticMushafPage: React.FC<AuthenticMushafPageProps> = ({
   onOpenSettings,
   mistakesCount,
   showTranslation = false,
-  isSecondaryPage = false
+  isSecondaryPage = false,
+  goalSummary,
+  onOpenDailyTarget,
 }) => {
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   const [imageError, setImageError] = useState<boolean>(false);
@@ -156,6 +161,18 @@ export const AuthenticMushafPage: React.FC<AuthenticMushafPageProps> = ({
           {pageData?.hizbString || `Juz' ${pageData?.juzNumber || 1}`}
         </div>
       </div>
+
+      {/* Daily Goal Progress Bar beneath Mushaf page header */}
+      {goalSummary && (
+        <div className="w-full px-2 sm:px-3 z-20">
+          <MushafGoalProgressBar
+            summary={goalSummary}
+            theme={theme}
+            pageNumber={pageNumber}
+            onOpenDailyTarget={onOpenDailyTarget}
+          />
+        </div>
+      )}
 
       {/* Main Authentic King Fahd Complex Mushaf Canvas Container */}
       <div className="relative w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden">

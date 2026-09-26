@@ -11,6 +11,7 @@ interface PagePickerModalProps {
   currentPageNumber: number;
   activeRange: PageRangeConfig | null;
   onSetRange: (range: PageRangeConfig | null) => void;
+  onOpenDailyTarget?: () => void;
 }
 
 export const PagePickerModal: React.FC<PagePickerModalProps> = ({
@@ -20,6 +21,7 @@ export const PagePickerModal: React.FC<PagePickerModalProps> = ({
   currentPageNumber,
   activeRange,
   onSetRange,
+  onOpenDailyTarget,
 }) => {
   const [activeTab, setActiveTab] = useState<'range' | 'juz' | 'surah' | 'direct'>('range');
   const [startPageInput, setStartPageInput] = useState<number>(activeRange?.startPage || currentPageNumber);
@@ -118,12 +120,28 @@ export const PagePickerModal: React.FC<PagePickerModalProps> = ({
               </div>
             </div>
 
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-amber-200/50 hover:bg-amber-300/80 dark:bg-amber-900/40 dark:hover:bg-amber-800/60 text-amber-950 dark:text-amber-100 flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              {onOpenDailyTarget && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenDailyTarget();
+                  }}
+                  className="px-2.5 py-1 rounded-xl bg-amber-800/15 hover:bg-amber-800/25 text-amber-950 dark:text-amber-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                  title="Configure Daily Memorization Goal (Juz, Surah, Pages, Quotas)"
+                >
+                  <Target className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+                  <span className="hidden xs:inline">Daily Goal</span>
+                </button>
+              )}
+
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full bg-amber-200/50 hover:bg-amber-300/80 dark:bg-amber-900/40 dark:hover:bg-amber-800/60 text-amber-950 dark:text-amber-100 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Active Range Status Bar if active */}

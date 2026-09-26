@@ -98,6 +98,11 @@ export interface BlankTarget {
   ayahIndex: number;
   ayahNumberInSurah: number;
   fullAyah: Ayah;
+  subAyahPart?: {
+    partIndex: number;
+    totalParts: number;
+    label?: string; // e.g. "Beginning", "Middle Clause", "Conclusion", "First Half", "Second Half"
+  };
   hiddenType: 'full' | 'portion';
   portionSection?: 'start' | 'middle' | 'end';
   hiddenWordIndices?: number[]; // indices of words in the ayah that are hidden
@@ -151,4 +156,43 @@ export interface RangeSessionStats {
   pagesCompleted: number[];
   totalBlanksInSession: number;
   correctBlanksInSession: number;
+}
+
+export type DailyTargetMode = 'juz' | 'pages-range' | 'pages-count' | 'surah' | 'blanks-count';
+
+export interface DailyTargetConfig {
+  enabled: boolean;
+  mode: DailyTargetMode;
+  title: string;
+  startPage?: number;
+  endPage?: number;
+  targetPagesCount?: number;
+  targetBlanksCount?: number;
+  selectedJuz?: number;
+  selectedSurah?: number;
+  surahName?: string;
+  juzName?: string;
+}
+
+export interface DailyProgressData {
+  date: string; // YYYY-MM-DD
+  completedPages: number[];
+  practicedPages: number[];
+  blanksCompletedToday: number;
+  correctBlanksToday: number;
+  currentStreakDays: number;
+  lastActiveDate: string;
+}
+
+export interface GoalProgressSummary {
+  percent: number; // 0 - 100
+  current: number;
+  target: number;
+  unit: 'pages' | 'blanks';
+  formattedLabel: string; // e.g. "6 / 10 pages"
+  title: string;
+  isComplete: boolean;
+  spreadPositionText?: string;
+  relativePositionPercent: number;
+  isOnTargetPage: boolean;
 }

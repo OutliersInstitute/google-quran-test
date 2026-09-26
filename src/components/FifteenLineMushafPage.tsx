@@ -1,10 +1,11 @@
 import React from 'react';
-import { Ayah, BlankTarget, MushafTheme, QuranPageData, Surah, PageFifteenLine, PageLineItem, PageMarginConfig } from '../types';
+import { Ayah, BlankTarget, MushafTheme, QuranPageData, Surah, PageFifteenLine, PageLineItem, PageMarginConfig, GoalProgressSummary } from '../types';
 import { toArabicDigits } from '../services/quranApi';
 import { Settings } from 'lucide-react';
 import { formatPageIntoFifteenLines } from '../utils/fifteenLineEngine';
 import { applyKashidaToLine, isLineCentered, stripTajweedMarkers } from '../utils/kashida';
 import { triggerHaptic } from '../utils/haptics';
+import { MushafGoalProgressBar } from './MushafGoalProgressBar';
 
 interface FifteenLineMushafPageProps {
   pageData: QuranPageData;
@@ -23,6 +24,8 @@ interface FifteenLineMushafPageProps {
   mistakesCount?: number;
   showTranslation?: boolean;
   isSecondaryPage?: boolean;
+  goalSummary?: GoalProgressSummary | null;
+  onOpenDailyTarget?: () => void;
 }
 
 export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
@@ -41,7 +44,9 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
   onOpenSettings,
   mistakesCount,
   showTranslation = false,
-  isSecondaryPage = false
+  isSecondaryPage = false,
+  goalSummary,
+  onOpenDailyTarget,
 }) => {
   const handleBlankClick = onSelectBlankId || onSelectBlank;
 
@@ -203,6 +208,16 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
           {hizbString || `Juz' ${juzNumber}`}
         </div>
       </div>
+
+      {/* Visual Progress Bar beneath Mushaf page header indicating daily goal progress on current page spread */}
+      {goalSummary && (
+        <MushafGoalProgressBar
+          summary={goalSummary}
+          theme={theme}
+          pageNumber={pageNumber}
+          onOpenDailyTarget={onOpenDailyTarget}
+        />
+      )}
 
       {/* Expanded Medina Mushaf 15-Line Canvas - Distributed evenly with vertical row gap */}
       <div 

@@ -434,7 +434,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                       onSelectBlankIndex(idx);
                     }}
                     className={`flex-1 min-w-[28px] py-0.5 px-1 rounded-md text-[11px] font-sans border transition-all cursor-pointer flex items-center justify-center gap-0.5 ${btnStyle}`}
-                    title={`Blank (${idx + 1}) - Ayah ${target.ayahNumberInSurah}`}
+                    title={`Blank (${idx + 1}) - Ayah ${target.ayahNumberInSurah}${target.subAyahPart ? ` (Part ${target.subAyahPart.partIndex}/${target.subAyahPart.totalParts}: ${target.subAyahPart.label})` : ''}`}
                   >
                     <span>({idx + 1})</span>
                     {target.isAnswered && (
@@ -571,8 +571,13 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                     </span>
                   )}
                   {activeTarget && (
-                    <span className="text-[10px] font-bold text-amber-900/80 dark:text-amber-300/80 bg-amber-200/50 px-1.5 py-0.5 rounded-md">
-                      Ayah {activeTarget.ayahNumberInSurah}
+                    <span className="text-[10px] font-bold text-amber-900/80 dark:text-amber-300/80 bg-amber-200/50 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                      <span>Ayah {activeTarget.ayahNumberInSurah}</span>
+                      {activeTarget.subAyahPart && (
+                        <span className="bg-amber-800 text-white px-1 py-0.2 rounded text-[9px] font-bold">
+                          Part {activeTarget.subAyahPart.partIndex}/{activeTarget.subAyahPart.totalParts} ({activeTarget.subAyahPart.label})
+                        </span>
+                      )}
                     </span>
                   )}
                 </div>
@@ -584,7 +589,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                   {activeTarget.portionSection === 'start' || (!activeTarget.visiblePrefix && activeTarget.visibleSuffix) ? (
                     <>
                       <span className="text-[10px] font-sans font-bold text-amber-900 dark:text-amber-300 block mb-0.5">
-                        ✦ بِدَايَةُ الآيَةِ (Beginning Section):
+                        ✦ بِدَايَةُ الآيَةِ {activeTarget.subAyahPart?.label ? `(${activeTarget.subAyahPart.label})` : '(Beginning Section)'}:
                       </span>
                       <span className="font-quran text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 leading-relaxed">
                         <span className="text-red-600 dark:text-red-400 font-extrabold px-1 bg-red-100/80 dark:bg-red-950/50 rounded">[ ... ؟؟؟ ]</span> {activeTarget.visibleSuffix}
@@ -593,7 +598,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                   ) : activeTarget.portionSection === 'middle' || (activeTarget.visiblePrefix && activeTarget.visibleSuffix) ? (
                     <>
                       <span className="text-[10px] font-sans font-bold text-amber-900 dark:text-amber-300 block mb-0.5">
-                        ✦ وَسَطُ الآيَةِ (Middle Section):
+                        ✦ وَسَطُ الآيَةِ {activeTarget.subAyahPart?.label ? `(${activeTarget.subAyahPart.label})` : '(Middle Section)'}:
                       </span>
                       <span className="font-quran text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 leading-relaxed">
                         {activeTarget.visiblePrefix} <span className="text-red-600 dark:text-red-400 font-extrabold px-1 bg-red-100/80 dark:bg-red-950/50 rounded">[ ... ؟؟؟ ]</span> {activeTarget.visibleSuffix}
@@ -602,7 +607,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                   ) : (
                     <>
                       <span className="text-[10px] font-sans font-bold text-amber-900 dark:text-amber-300 block mb-0.5">
-                        ✦ خَاتِمَةُ الآيَةِ (Ending Clause):
+                        ✦ خَاتِمَةُ الآيَةِ {activeTarget.subAyahPart?.label ? `(${activeTarget.subAyahPart.label})` : '(Ending Clause)'}:
                       </span>
                       <span className="font-quran text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 leading-relaxed">
                         {activeTarget.visiblePrefix} <span className="text-red-600 dark:text-red-400 font-extrabold px-1 bg-red-100/80 dark:bg-red-950/50 rounded">[ ... ؟؟؟ ]</span>

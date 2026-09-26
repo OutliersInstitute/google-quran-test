@@ -209,7 +209,7 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
                   onSelectBlankIndex(idx);
                 }}
                 className={`px-2 py-0.5 rounded-lg text-xs font-sans border transition-all cursor-pointer flex items-center gap-0.5 whitespace-nowrap flex-shrink-0 ${btnClass}`}
-                title={`Blank ${idx + 1}`}
+                title={`Blank ${idx + 1} - Ayah ${target.ayahNumberInSurah}${target.subAyahPart ? ` (Part ${target.subAyahPart.partIndex}/${target.subAyahPart.totalParts}: ${target.subAyahPart.label})` : ''}`}
               >
                 <span>({idx + 1})</span>
                 {target.isAnswered && (
@@ -260,6 +260,24 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
         </div>
 
       </div>
+
+      {/* Active Verse & Sub-part Context Tag */}
+      {activeTarget && !isPageAllCompleted && (
+        <div className="flex items-center justify-between px-3 py-0.5 text-[10px] font-sans font-bold text-amber-950 dark:text-amber-200 bg-amber-900/5 dark:bg-stone-900/40 border-b border-amber-900/10">
+          <div className="flex items-center gap-1.5 truncate">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-600 flex-shrink-0" />
+            <span>Blank ({activeBlankIndex + 1}/{totalBlanks})</span>
+            {activeTarget.subAyahPart && (
+              <span className="text-[9px] font-bold bg-amber-800 text-white px-1.5 py-0.2 rounded-md flex-shrink-0">
+                Part {activeTarget.subAyahPart.partIndex}/{activeTarget.subAyahPart.totalParts} ({activeTarget.subAyahPart.label})
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] font-bold text-amber-900/80 dark:text-amber-300/80 flex-shrink-0">
+            Ayah {activeTarget.ayahNumberInSurah}
+          </span>
+        </div>
+      )}
 
       {/* 2. Main Horizontal Carousel Stage with Prominent Side Navigation Arrows */}
       <div className="relative w-full py-2 px-1 flex flex-col justify-center min-h-[110px] max-h-[135px] overflow-hidden">

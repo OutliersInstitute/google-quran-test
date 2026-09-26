@@ -3,11 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { BlankTarget, CarouselOption, ChallengeType, DifficultyLevel, GameStats, MushafTheme, QuranPageData, Surah, Ayah, PageRangeConfig, RangeSessionStats, PageViewMode, PageRenderMode, PageMarginConfig } from './types';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { 
+  BlankTarget, CarouselOption, ChallengeType, DifficultyLevel, GameStats, 
+  MushafTheme, QuranPageData, Surah, Ayah, PageRangeConfig, RangeSessionStats, 
+  PageViewMode, PageRenderMode, PageMarginConfig, DailyTargetConfig, DailyProgressData, GoalProgressSummary 
+} from './types';
 import { BUILT_IN_SURAHS } from './data/quranData';
 import { fetchPage } from './services/quranApi';
 import { createPageBlankTargets } from './utils/fifteenLineEngine';
+import { loadDailyTargetConfig, saveDailyTargetConfig, loadDailyProgress, saveDailyProgress, calculateGoalProgress } from './utils/dailyGoalEngine';
 import { FifteenLineMushafPage } from './components/FifteenLineMushafPage';
 import { AuthenticMushafPage } from './components/AuthenticMushafPage';
 import { SideVerseCarousel } from './components/SideVerseCarousel';
@@ -16,6 +21,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { SurahPickerModal } from './components/SurahPickerModal';
 import { PagePickerModal } from './components/PagePickerModal';
 import { RangeCompleteModal } from './components/RangeCompleteModal';
+import { DailyTargetModal } from './components/DailyTargetModal';
 import { ReviewDrawer } from './components/ReviewDrawer';
 import { HowToPlayModal } from './components/HowToPlayModal';
 import { AudioReciter } from './components/AudioReciter';
@@ -31,6 +37,7 @@ const AUTO_PLAY_AUDIO_STORAGE_KEY = 'mushaf_auto_play_audio_v1';
 const PAGE_VIEW_MODE_STORAGE_KEY = 'mushaf_page_view_mode_v1';
 const PAGE_RENDER_MODE_STORAGE_KEY = 'mushaf_page_render_mode_v1';
 const PAGE_MARGINS_STORAGE_KEY = 'mushaf_page_margins_v1';
+const MULTI_BLANKS_STORAGE_KEY = 'mushaf_multi_blanks_per_ayah_v1';
 
 // Helper to determine facing spread page numbers in Medina Mushaf
 export function getSpreadPageNumbers(pageNum: number, mode: PageViewMode): { rightPage: number; leftPage: number | null } {
@@ -198,6 +205,17 @@ export default function App() {
     return 3;
   });
 
+  // Multiple blanks in long ayahs preference
+  const [allowMultiBlanksPerAyah, setAllowMultiBlanksPerAyah] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(MULTI_BLANKS_STORAGE_KEY);
+      if (saved !== null) return saved === 'true';
+    } catch {
+      // fallback
+    }
+    return true; // enabled by default for rich long ayah coverage
+  });
+
   // Challenge settings
   const [challengeType, setChallengeType] = useState<ChallengeType>('full-ayah');
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
@@ -212,6 +230,29 @@ export default function App() {
   const [isPagePickerOpen, setIsPagePickerOpen] = useState<boolean>(false);
   const [isReviewOpen, setIsReviewOpen] = useState<boolean>(false);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState<boolean>(false);
+  const [isDailyTargetModalOpen, setIsDailyTargetModalOpen] = useState<boolean>(false);
+
+  // Daily Memorization Goal & Target State
+  const [dailyTarget, setDailyTarget] = useState<DailyTargetConfig>(() => loadDailyTargetConfig());
+  const [dailyProgress, setDailyProgress] = useState<DailyProgressData>(() => loadDailyProgress());
+
+  const handleUpdateDailyTarget = (newTarget: DailyTargetConfig) => {
+    setDailyTarget(newTarget);
+    saveDailyTargetConfig(newTarget);
+  };
+
+  const handleResetTodayProgress = () => {
+    setDailyProgress(prev => {
+      const reset: DailyProgressData = {
+        ...prev,
+        completedPages: [],
+        blanksCompletedToday: 0,
+        correctBlanksToday: 0,
+      };
+      saveDailyProgress(reset);
+      return reset;
+    });
+  };
 
   // Haptics preference state
   const [hapticsEnabled, setHapticsEnabledState] = useState<boolean>(() => getHapticsEnabled());
@@ -321,7 +362,8 @@ export default function App() {
     countPref: number | 'all',
     cType: ChallengeType,
     diff: DifficultyLevel,
-    mobileOnlyPortion: boolean = isMobile
+    mobileOnlyPortion: boolean = isMobile,
+    allowMultiBlanks: boolean = allowMultiBlanksPerAyah
   ) => {
     // If on mobile, force portion-ayah challenge so only portions of the ayah are hidden to fit the carousel cards
     const effectiveChallengeType: ChallengeType = mobileOnlyPortion ? 'portion-ayah' : cType;
@@ -332,8 +374,8 @@ export default function App() {
         ? 'all' 
         : Math.max(1, Math.ceil((typeof countPref === 'number' ? countPref : 2) / 2));
       
-      const rightCount = countPerSide === 'all' ? rightData.ayahs.length : countPerSide;
-      const leftCount = countPerSide === 'all' ? leftData.ayahs.length : countPerSide;
+      const rightCount = countPerSide;
+      const leftCount = countPerSide;
 
       const rightTargets = createPageBlankTargets(
         rightData.ayahs,
@@ -342,7 +384,8 @@ export default function App() {
         effectiveChallengeType,
         diff,
         rightData.pageNumber,
-        1
+        1,
+        allowMultiBlanks
       );
 
       const leftTargets = createPageBlankTargets(
@@ -352,24 +395,24 @@ export default function App() {
         effectiveChallengeType,
         diff,
         leftData.pageNumber,
-        rightTargets.length + 1
+        rightTargets.length + 1,
+        allowMultiBlanks
       );
 
       return [...rightTargets, ...leftTargets];
     } else {
-      const totalAyahs = rightData.ayahs.length;
-      const count = countPref === 'all' ? totalAyahs : Math.min(countPref, totalAyahs);
       return createPageBlankTargets(
         rightData.ayahs,
         rightData.primarySurah,
-        count,
+        countPref,
         effectiveChallengeType,
         diff,
         rightData.pageNumber,
-        1
+        1,
+        allowMultiBlanks
       );
     }
-  }, [isMobile]);
+  }, [isMobile, allowMultiBlanksPerAyah]);
 
   // Load 15-line Quran page (and facing page if in double page mode)
   const loadPage = useCallback(async (pageNum: number, modeOverride?: PageViewMode) => {
@@ -524,10 +567,29 @@ export default function App() {
     triggerHaptic('light');
     setBlankCountChoice(count);
     if (currentPageData && currentPageData.ayahs.length > 0) {
-      const targets = generateBlanksForPages(currentPageData, secondaryPageData, count, challengeType, difficulty, isMobile);
+      const targets = generateBlanksForPages(currentPageData, secondaryPageData, count, challengeType, difficulty, isMobile, allowMultiBlanksPerAyah);
       setBlankTargets(targets);
       setActiveBlankIndex(0);
     }
+  };
+
+  // Toggle allowing multiple blanks per long ayah
+  const handleToggleMultiBlanksPerAyah = () => {
+    triggerHaptic('light');
+    setAllowMultiBlanksPerAyah(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem(MULTI_BLANKS_STORAGE_KEY, String(next));
+      } catch {
+        // ignore
+      }
+      if (currentPageData && currentPageData.ayahs.length > 0) {
+        const targets = generateBlanksForPages(currentPageData, secondaryPageData, blankCountChoice, challengeType, difficulty, isMobile, next);
+        setBlankTargets(targets);
+        setActiveBlankIndex(0);
+      }
+      return next;
+    });
   };
 
   // Generate fresh random blanks on current page / spread
@@ -646,6 +708,29 @@ export default function App() {
       }));
     }
 
+    // Update daily progress statistics
+    setDailyProgress(prev => {
+      const isNowAllCompleted = updatedTargets.length > 0 && updatedTargets.every(t => t.isAnswered);
+      const pagesToAdd: number[] = [];
+      if (isNowAllCompleted) {
+        pagesToAdd.push(currentPageNumber);
+        if (pageViewMode === 'double' && secondaryPageData) {
+          pagesToAdd.push(secondaryPageData.pageNumber);
+        }
+      }
+      const updated: DailyProgressData = {
+        ...prev,
+        blanksCompletedToday: prev.blanksCompletedToday + 1,
+        correctBlanksToday: correct ? prev.correctBlanksToday + 1 : prev.correctBlanksToday,
+        practicedPages: Array.from(new Set([...prev.practicedPages, currentPageNumber])),
+        completedPages: pagesToAdd.length > 0
+          ? Array.from(new Set([...prev.completedPages, ...pagesToAdd]))
+          : prev.completedPages,
+      };
+      saveDailyProgress(updated);
+      return updated;
+    });
+
     // Auto audio recitation upon correct answer if enabled
     if (correct && autoPlayAudio && activeTarget.fullAyah.audio) {
       setActiveAudioUrl(activeTarget.fullAyah.audio);
@@ -708,6 +793,18 @@ export default function App() {
   const currentSurahObj: Surah = currentPageData?.primarySurah || BUILT_IN_SURAHS[12] || BUILT_IN_SURAHS[1];
   const activeBlankTarget: BlankTarget | null = blankTargets[activeBlankIndex] || blankTargets[0] || null;
 
+  // Compute goal progress summary for right-hand page and overall spread
+  const rightGoalSummary: GoalProgressSummary = useMemo(() => {
+    const leftPageNum = pageViewMode === 'double' && secondaryPageData ? secondaryPageData.pageNumber : null;
+    return calculateGoalProgress(dailyTarget, dailyProgress, currentPageNumber, leftPageNum);
+  }, [dailyTarget, dailyProgress, currentPageNumber, secondaryPageData, pageViewMode]);
+
+  // Compute goal progress summary for left-hand page if facing spread
+  const leftGoalSummary: GoalProgressSummary | null = useMemo(() => {
+    if (!secondaryPageData) return null;
+    return calculateGoalProgress(dailyTarget, dailyProgress, secondaryPageData.pageNumber, currentPageNumber);
+  }, [dailyTarget, dailyProgress, secondaryPageData, currentPageNumber]);
+
   return (
     <div 
       id="mushaf-app-root" 
@@ -756,6 +853,8 @@ export default function App() {
                       onOpenSettings={() => setIsSettingsOpen(true)}
                       mistakesCount={stats.mistakeAyahs.length}
                       showTranslation={showTranslation}
+                      goalSummary={rightGoalSummary}
+                      onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
                     />
                   ) : (
                     <FifteenLineMushafPage
@@ -772,6 +871,8 @@ export default function App() {
                       onOpenSettings={() => setIsSettingsOpen(true)}
                       mistakesCount={stats.mistakeAyahs.length}
                       showTranslation={showTranslation}
+                      goalSummary={rightGoalSummary}
+                      onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
                     />
                   )}
                 </div>
@@ -798,6 +899,8 @@ export default function App() {
                           onOpenSettings={() => setIsSettingsOpen(true)}
                           mistakesCount={stats.mistakeAyahs.length}
                           showTranslation={showTranslation}
+                          goalSummary={rightGoalSummary}
+                          onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
                         />
                       ) : (
                         <FifteenLineMushafPage
@@ -814,6 +917,8 @@ export default function App() {
                           onOpenSettings={() => setIsSettingsOpen(true)}
                           mistakesCount={stats.mistakeAyahs.length}
                           showTranslation={showTranslation}
+                          goalSummary={rightGoalSummary}
+                          onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
                         />
                       )}
                     </div>
@@ -843,6 +948,8 @@ export default function App() {
                           mistakesCount={stats.mistakeAyahs.length}
                           showTranslation={showTranslation}
                           isSecondaryPage={true}
+                          goalSummary={leftGoalSummary || rightGoalSummary}
+                          onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
                         />
                       ) : (
                         <FifteenLineMushafPage
@@ -860,6 +967,8 @@ export default function App() {
                           mistakesCount={stats.mistakeAyahs.length}
                           showTranslation={showTranslation}
                           isSecondaryPage={true}
+                          goalSummary={leftGoalSummary || rightGoalSummary}
+                          onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
                         />
                       )}
                     </div>
@@ -883,6 +992,8 @@ export default function App() {
                           onOpenSettings={() => setIsSettingsOpen(true)}
                           mistakesCount={stats.mistakeAyahs.length}
                           showTranslation={showTranslation}
+                          goalSummary={rightGoalSummary}
+                          onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
                         />
                       ) : (
                         <FifteenLineMushafPage
@@ -899,6 +1010,8 @@ export default function App() {
                           onOpenSettings={() => setIsSettingsOpen(true)}
                           mistakesCount={stats.mistakeAyahs.length}
                           showTranslation={showTranslation}
+                          goalSummary={rightGoalSummary}
+                          onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
                         />
                       )}
                     </div>
@@ -1019,6 +1132,8 @@ export default function App() {
         onToggleAutoAdvance={() => setAutoAdvance(!autoAdvance)}
         autoAdvanceOnCorrect={autoAdvanceOnCorrect}
         onToggleAutoAdvanceOnCorrect={handleToggleAutoAdvanceOnCorrect}
+        allowMultiBlanksPerAyah={allowMultiBlanksPerAyah}
+        onToggleMultiBlanksPerAyah={handleToggleMultiBlanksPerAyah}
         theme={theme}
         onChangeTheme={setTheme}
         onShuffleNewBlanks={handleShuffleNewBlanks}
@@ -1027,12 +1142,28 @@ export default function App() {
         onOpenPagePicker={() => setIsPagePickerOpen(true)}
         onOpenReview={() => setIsReviewOpen(true)}
         onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
+        dailyTarget={dailyTarget}
+        goalSummary={rightGoalSummary}
+        onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
         currentSurah={currentSurahObj}
         currentPageNumber={currentPageNumber}
         activeRange={activeRange}
         mistakesCount={stats.mistakeAyahs.length}
         totalAnswered={stats.totalAnswered}
         correctAnswers={stats.correctAnswers}
+      />
+
+      {/* Daily Memorization Target Modal */}
+      <DailyTargetModal
+        isOpen={isDailyTargetModalOpen}
+        onClose={() => setIsDailyTargetModalOpen(false)}
+        activeTarget={dailyTarget}
+        onSaveTarget={handleUpdateDailyTarget}
+        dailyProgress={dailyProgress}
+        goalSummary={rightGoalSummary}
+        currentPageNumber={currentPageNumber}
+        onJumpToPage={(p) => loadPage(p)}
+        onResetTodayProgress={handleResetTodayProgress}
       />
 
       {/* Surah Picker Modal (1 to 114) */}
@@ -1051,6 +1182,7 @@ export default function App() {
         currentPageNumber={currentPageNumber}
         activeRange={activeRange}
         onSetRange={handleSetRange}
+        onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
       />
 
       {/* Range Completion Celebratory Modal */}
