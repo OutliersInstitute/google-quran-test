@@ -258,3 +258,129 @@ export function calculateGoalProgress(
     isOnTargetPage,
   };
 }
+
+export const DAILY_HISTORY_STORAGE_KEY = 'mushaf_daily_history_v2';
+
+export function getPastDateString(daysAgo: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function getDefaultSeedHistory(): import('../types').DailyHistoryRecord[] {
+  // Generate realistic past 14 days of memorization progress
+  return [
+    { date: getPastDateString(13), pagesCompleted: 2, pagesList: [228, 229], blanksAnswered: 8, blanksCorrect: 7, targetMet: true, targetTitle: 'Juz 12 (p. 222–241)' },
+    { date: getPastDateString(12), pagesCompleted: 3, pagesList: [230, 231, 232], blanksAnswered: 12, blanksCorrect: 11, targetMet: true, targetTitle: 'Juz 12 (p. 222–241)' },
+    { date: getPastDateString(11), pagesCompleted: 1, pagesList: [232], blanksAnswered: 5, blanksCorrect: 4, targetMet: false, targetTitle: 'Juz 12 (p. 222–241)' },
+    { date: getPastDateString(10), pagesCompleted: 2, pagesList: [233, 234], blanksAnswered: 10, blanksCorrect: 9, targetMet: true, targetTitle: 'Surah Yusuf (p. 235–248)' },
+    { date: getPastDateString(9), pagesCompleted: 3, pagesList: [234, 235], blanksAnswered: 11, blanksCorrect: 11, targetMet: true, targetTitle: 'Surah Yusuf (p. 235–248)' },
+    { date: getPastDateString(8), pagesCompleted: 2, pagesList: [235, 236], blanksAnswered: 8, blanksCorrect: 8, targetMet: true, targetTitle: 'Surah Yusuf (p. 235–248)' },
+    { date: getPastDateString(7), pagesCompleted: 4, pagesList: [231, 232, 233, 234], blanksAnswered: 16, blanksCorrect: 15, targetMet: true, targetTitle: 'Surah Yusuf Review' },
+    { date: getPastDateString(6), pagesCompleted: 2, pagesList: [235, 236], blanksAnswered: 9, blanksCorrect: 8, targetMet: true, targetTitle: 'Surah Yusuf (p. 235–248)' },
+    { date: getPastDateString(5), pagesCompleted: 3, pagesList: [235, 236], blanksAnswered: 12, blanksCorrect: 11, targetMet: true, targetTitle: 'Surah Yusuf (p. 235–248)' },
+    { date: getPastDateString(4), pagesCompleted: 2, pagesList: [236], blanksAnswered: 8, blanksCorrect: 7, targetMet: true, targetTitle: 'Surah Yusuf (p. 235–248)' },
+    { date: getPastDateString(3), pagesCompleted: 3, pagesList: [235, 236], blanksAnswered: 10, blanksCorrect: 10, targetMet: true, targetTitle: 'Surah Yusuf (p. 235–248)' },
+    { date: getPastDateString(2), pagesCompleted: 2, pagesList: [236], blanksAnswered: 9, blanksCorrect: 9, targetMet: true, targetTitle: 'Surah Yusuf (p. 235–248)' },
+    { date: getPastDateString(1), pagesCompleted: 3, pagesList: [235, 236], blanksAnswered: 12, blanksCorrect: 11, targetMet: true, targetTitle: 'Surah Yusuf (p. 235–248)' },
+  ];
+}
+
+export function loadDailyHistory(): import('../types').DailyHistoryRecord[] {
+  try {
+    const raw = localStorage.getItem(DAILY_HISTORY_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load daily history', e);
+  }
+  const seed = getDefaultSeedHistory();
+  saveDailyHistory(seed);
+  return seed;
+}
+
+export function saveDailyHistory(records: import('../types').DailyHistoryRecord[]): void {
+  try {
+    localStorage.setItem(DAILY_HISTORY_STORAGE_KEY, JSON.stringify(records));
+  } catch (e) {
+    console.warn('Failed to save daily history', e);
+  }
+}
+
+export function updateTodayHistoryRecord(
+  progress: DailyProgressData,
+  target: DailyTargetConfig
+): import('../types').DailyHistoryRecord[] {
+  const history = loadDailyHistory();
+  const today = getTodayDateString();
+  const existingIdx = history.findIndex(h => h.date === today);
+
+  const goalSummary = calculateGoalProgress(target, progress, progress.practicedPages[0] || 236);
+  const targetMet = goalSummary.isComplete;
+
+  const todayRecord: import('../types').DailyHistoryRecord = {
+    date: today,
+    pagesCompleted: progress.completedPages.length,
+    pagesList: progress.completedPages,
+    blanksAnswered: progress.blanksCompletedToday,
+    blanksCorrect: progress.correctBlanksToday,
+    targetMet,
+    targetTitle: target.title || 'Daily Goal',
+  };
+
+  let updated: import('../types').DailyHistoryRecord[];
+  if (existingIdx !== -1) {
+    updated = [...history];
+    updated[existingIdx] = todayRecord;
+  } else {
+    updated = [...history, todayRecord];
+  }
+  saveDailyHistory(updated);
+  return updated;
+}
+
+export function getHistoryStats(
+  records: import('../types').DailyHistoryRecord[],
+  progress: DailyProgressData
+): import('../types').MemorizationHistoryStats {
+  const allRecords = [...records];
+  const today = getTodayDateString();
+  if (!allRecords.some(r => r.date === today) && (progress.completedPages.length > 0 || progress.blanksCompletedToday > 0)) {
+    allRecords.push({
+      date: today,
+      pagesCompleted: progress.completedPages.length,
+      pagesList: progress.completedPages,
+      blanksAnswered: progress.blanksCompletedToday,
+      blanksCorrect: progress.correctBlanksToday,
+      targetMet: false,
+      targetTitle: 'Daily Goal',
+    });
+  }
+
+  const uniquePagesSet = new Set<number>();
+  let totalBlanks = 0;
+  let totalCorrect = 0;
+
+  allRecords.forEach(r => {
+    (r.pagesList || []).forEach(p => uniquePagesSet.add(p));
+    totalBlanks += r.blanksAnswered || 0;
+    totalCorrect += r.blanksCorrect || 0;
+  });
+
+  const overallAccuracy = totalBlanks > 0 ? Math.round((totalCorrect / totalBlanks) * 100) : 100;
+
+  return {
+    totalDaysActive: allRecords.filter(r => r.blanksAnswered > 0 || r.pagesCompleted > 0).length,
+    totalCompletedPages: uniquePagesSet.size,
+    totalBlanksAnswered: totalBlanks,
+    overallAccuracy,
+    historyRecords: allRecords.sort((a, b) => a.date.localeCompare(b.date)),
+  };
+}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BlankTarget, CarouselOption, Surah, DifficultyLevel } from '../types';
 import { 
   Settings, CheckCircle2, XCircle, ArrowRight,
-  Sparkles, CheckCheck, Play, Pause, ChevronLeft, ChevronRight
+  Sparkles, CheckCheck, Play, Pause, ChevronLeft, ChevronRight, Home, Trophy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { triggerHaptic } from '../utils/haptics';
@@ -26,6 +26,8 @@ interface MobileBottomCarouselProps {
   onToggleAutoAdvance: () => void;
   difficulty: DifficultyLevel;
   onOpenSettings: () => void;
+  onNavigateHome?: () => void;
+  onNavigateLeagues?: () => void;
   onOpenReview?: () => void;
   mistakesCount?: number;
   showTranslation?: boolean;
@@ -44,6 +46,8 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
   onPreviousPage,
   autoAdvance,
   onOpenSettings,
+  onNavigateHome,
+  onNavigateLeagues,
   showTranslation = false,
 }) => {
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -247,6 +251,36 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
+
+          {/* Home Dashboard Trigger Icon */}
+          {onNavigateHome && (
+            <button
+              id="mobile-home-btn"
+              onClick={() => {
+                triggerHaptic('light');
+                onNavigateHome();
+              }}
+              className="p-1.5 rounded-xl bg-amber-900/15 hover:bg-amber-900/25 text-amber-950 dark:text-amber-100 border border-amber-900/20 shadow-xs cursor-pointer flex items-center justify-center transition-transform active:scale-95 flex-shrink-0"
+              title="Return to Home Dashboard & Goals"
+            >
+              <Home className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {/* Social Leagues Trigger Icon */}
+          {onNavigateLeagues && (
+            <button
+              id="mobile-leagues-btn"
+              onClick={() => {
+                triggerHaptic('light');
+                onNavigateLeagues();
+              }}
+              className="p-1.5 rounded-xl bg-amber-900/15 hover:bg-amber-900/25 text-amber-700 dark:text-amber-400 border border-amber-900/20 shadow-xs cursor-pointer flex items-center justify-center transition-transform active:scale-95 flex-shrink-0"
+              title="Open Social Leagues & Leaderboards"
+            >
+              <Trophy className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           {/* Settings Trigger Icon */}
           <button

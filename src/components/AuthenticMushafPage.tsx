@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Ayah, BlankTarget, MushafTheme, QuranPageData, PageFifteenLine, PageMarginConfig, GoalProgressSummary } from '../types';
 import { formatPageIntoFifteenLines } from '../utils/fifteenLineEngine';
-import { Settings, Loader2, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Settings, Loader2, Sparkles, CheckCircle2, AlertCircle, Home, Trophy } from 'lucide-react';
 import { triggerHaptic } from '../utils/haptics';
 import { MushafGoalProgressBar } from './MushafGoalProgressBar';
 
@@ -19,6 +19,8 @@ interface AuthenticMushafPageProps {
   onSelectBlankId?: (blankId: string) => void;
   onSelectBlank?: (blankId: string) => void;
   onOpenSettings?: () => void;
+  onNavigateHome?: () => void;
+  onNavigateLeagues?: () => void;
   mistakesCount?: number;
   showTranslation?: boolean;
   isSecondaryPage?: boolean;
@@ -50,6 +52,8 @@ export const AuthenticMushafPage: React.FC<AuthenticMushafPageProps> = ({
   onSelectBlankId,
   onSelectBlank,
   onOpenSettings,
+  onNavigateHome,
+  onNavigateLeagues,
   mistakesCount,
   showTranslation = false,
   isSecondaryPage = false,
@@ -99,6 +103,7 @@ export const AuthenticMushafPage: React.FC<AuthenticMushafPageProps> = ({
 
   // Theme filter styling for authentic page image
   const themeContainerBg = {
+    moonstone: 'bg-[#f4fafc] text-[#20373B]',
     parchment: 'bg-[#fcf9f2] text-[#2c251e]',
     emerald: 'bg-[#f4f8f5] text-[#0f281e]',
     midnight: 'bg-[#15191c] text-[#f1ece1]',
@@ -107,6 +112,7 @@ export const AuthenticMushafPage: React.FC<AuthenticMushafPageProps> = ({
 
   // Visual filter for night mode / parchment tinting
   const imageFilterClass = {
+    moonstone: 'filter contrast-[1.03] hue-rotate-[175deg] saturate-[0.85]',
     parchment: 'filter contrast-[1.03] sepia-[0.04]',
     emerald: 'filter contrast-[1.02] hue-rotate-[15deg]',
     midnight: 'filter invert-[0.88] hue-rotate-[180deg] contrast-[1.1] brightness-[0.9]',
@@ -136,26 +142,60 @@ export const AuthenticMushafPage: React.FC<AuthenticMushafPageProps> = ({
           {headerSurahName}
         </div>
 
-        {onOpenSettings && (
-          <button
-            id={`authentic-page-settings-btn-${pageNumber}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              triggerHaptic('light');
-              onOpenSettings();
-            }}
-            className="flex-shrink-0 p-1 sm:p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-current transition-all cursor-pointer flex items-center justify-center relative active:scale-95 mx-2"
-            title="Open Settings"
-            aria-label="Settings"
-          >
-            <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-current opacity-80 hover:opacity-100" />
-            {mistakesCount !== undefined && mistakesCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[8px] font-bold flex items-center justify-center leading-none shadow-xs">
-                {mistakesCount}
-              </span>
-            )}
-          </button>
-        )}
+        <div className="flex items-center gap-1 mx-2">
+          {onNavigateHome && (
+            <button
+              id={`authentic-page-home-btn-${pageNumber}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerHaptic('light');
+                onNavigateHome();
+              }}
+              className="flex-shrink-0 p-1 sm:p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-current transition-all cursor-pointer flex items-center justify-center relative active:scale-95"
+              title="Return to Home Dashboard"
+              aria-label="Home"
+            >
+              <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-current opacity-80 hover:opacity-100" />
+            </button>
+          )}
+
+          {onNavigateLeagues && (
+            <button
+              id={`authentic-page-leagues-btn-${pageNumber}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerHaptic('light');
+                onNavigateLeagues();
+              }}
+              className="flex-shrink-0 p-1 sm:p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-amber-700 dark:text-amber-400 transition-all cursor-pointer flex items-center justify-center relative active:scale-95"
+              title="Open Social Leagues & Leaderboard"
+              aria-label="Leagues"
+            >
+              <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 opacity-90 hover:opacity-100" />
+            </button>
+          )}
+
+          {onOpenSettings && (
+            <button
+              id={`authentic-page-settings-btn-${pageNumber}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerHaptic('light');
+                onOpenSettings();
+              }}
+              className="flex-shrink-0 p-1 sm:p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-current transition-all cursor-pointer flex items-center justify-center relative active:scale-95"
+              title="Open Settings"
+              aria-label="Settings"
+            >
+              <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-current opacity-80 hover:opacity-100" />
+              {mistakesCount !== undefined && mistakesCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[8px] font-bold flex items-center justify-center leading-none shadow-xs">
+                  {mistakesCount}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
 
         <div className="font-serif font-bold text-xs sm:text-sm tracking-tight flex-1 text-right truncate">
           {pageData?.hizbString || `Juz' ${pageData?.juzNumber || 1}`}

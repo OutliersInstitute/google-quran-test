@@ -7,12 +7,21 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { 
   BlankTarget, CarouselOption, ChallengeType, DifficultyLevel, GameStats, 
   MushafTheme, QuranPageData, Surah, Ayah, PageRangeConfig, RangeSessionStats, 
-  PageViewMode, PageRenderMode, PageMarginConfig, DailyTargetConfig, DailyProgressData, GoalProgressSummary 
+  PageViewMode, PageRenderMode, PageMarginConfig, DailyTargetConfig, DailyProgressData, GoalProgressSummary,
+  AppView, DailyHistoryRecord, League, XpEventNotification 
 } from './types';
 import { BUILT_IN_SURAHS } from './data/quranData';
 import { fetchPage } from './services/quranApi';
 import { createPageBlankTargets } from './utils/fifteenLineEngine';
-import { loadDailyTargetConfig, saveDailyTargetConfig, loadDailyProgress, saveDailyProgress, calculateGoalProgress } from './utils/dailyGoalEngine';
+import { 
+  loadDailyTargetConfig, saveDailyTargetConfig, 
+  loadDailyProgress, saveDailyProgress, calculateGoalProgress,
+  loadDailyHistory, updateTodayHistoryRecord 
+} from './utils/dailyGoalEngine';
+import { 
+  loadStoredLeagues, saveStoredLeagues, loadActiveLeagueId, saveActiveLeagueId, 
+  awardXpToUser, createNewLeague, joinLeagueByCode, SCORING_RULES 
+} from './utils/leagueEngine';
 import { FifteenLineMushafPage } from './components/FifteenLineMushafPage';
 import { AuthenticMushafPage } from './components/AuthenticMushafPage';
 import { SideVerseCarousel } from './components/SideVerseCarousel';
@@ -22,10 +31,13 @@ import { SurahPickerModal } from './components/SurahPickerModal';
 import { PagePickerModal } from './components/PagePickerModal';
 import { RangeCompleteModal } from './components/RangeCompleteModal';
 import { DailyTargetModal } from './components/DailyTargetModal';
+import { HomeScreen } from './components/HomeScreen';
+import { LeagueDashboard } from './components/LeagueDashboard';
+import { XpNotificationToast } from './components/XpNotificationToast';
 import { ReviewDrawer } from './components/ReviewDrawer';
 import { HowToPlayModal } from './components/HowToPlayModal';
 import { AudioReciter } from './components/AudioReciter';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Home, Target, Play } from 'lucide-react';
 import { SURAH_METADATA_LIST } from './data/surahList';
 import { triggerHaptic, getHapticsEnabled, setHapticsEnabled } from './utils/haptics';
 
@@ -56,8 +68,27 @@ export function getSpreadPageNumbers(pageNum: number, mode: PageViewMode): { rig
 }
 
 export default function App() {
-  // Theme state
-  const [theme, setTheme] = useState<MushafTheme>('parchment');
+  // Theme state - defaults to user's requested palette 'moonstone' (Light Blue, Moonstone, Saffron, Gunmetal)
+  const [theme, setTheme] = useState<MushafTheme>(() => {
+    try {
+      const saved = localStorage.getItem('mushaf_hafiz_theme');
+      if (saved && ['moonstone', 'parchment', 'emerald', 'midnight', 'classic-white'].includes(saved)) {
+        return saved as MushafTheme;
+      }
+    } catch {
+      // fallback
+    }
+    return 'moonstone';
+  });
+
+  const handleChangeTheme = (newTheme: MushafTheme) => {
+    setTheme(newTheme);
+    try {
+      localStorage.setItem('mushaf_hafiz_theme', newTheme);
+    } catch {
+      // ignore
+    }
+  };
   const [showTranslation, setShowTranslation] = useState<boolean>(false);
 
   // Page Render Mode (Authentic Printed Medina Mushaf Page Image vs Digital Text)
@@ -232,13 +263,59 @@ export default function App() {
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState<boolean>(false);
   const [isDailyTargetModalOpen, setIsDailyTargetModalOpen] = useState<boolean>(false);
 
+  // Active View ('home' | 'mushaf' | 'leagues')
+  const [activeView, setActiveView] = useState<AppView>('home');
+
+  // Social Leagues & Gamification State (Mimo-Inspired)
+  const [leagues, setLeagues] = useState<League[]>(() => loadStoredLeagues());
+  const [activeLeagueId, setActiveLeagueId] = useState<string>(() => loadActiveLeagueId(leagues));
+  const [xpNotification, setXpNotification] = useState<XpEventNotification | null>(null);
+
+  const activeLeague = useMemo(() => {
+    return leagues.find(l => l.id === activeLeagueId) || leagues[0];
+  }, [leagues, activeLeagueId]);
+
+  const handleSelectLeague = (id: string) => {
+    setActiveLeagueId(id);
+    saveActiveLeagueId(id);
+  };
+
+  const handleCreateLeague = (data: any) => {
+    const res = createNewLeague(leagues, data);
+    setLeagues(res.leagues);
+    setActiveLeagueId(res.newLeague.id);
+    setXpNotification({
+      id: `xp-create-${Date.now()}`,
+      points: 50,
+      label: `Created League "${data.name}"!`,
+      timestamp: Date.now(),
+    });
+  };
+
+  const handleJoinLeagueCode = (code: string) => {
+    const res = joinLeagueByCode(leagues, code);
+    setLeagues(res.updatedLeagues);
+    if (res.league) {
+      setActiveLeagueId(res.league.id);
+    }
+    setXpNotification({
+      id: `xp-join-${Date.now()}`,
+      points: 25,
+      label: res.message,
+      timestamp: Date.now(),
+    });
+  };
+
   // Daily Memorization Goal & Target State
   const [dailyTarget, setDailyTarget] = useState<DailyTargetConfig>(() => loadDailyTargetConfig());
   const [dailyProgress, setDailyProgress] = useState<DailyProgressData>(() => loadDailyProgress());
+  const [dailyHistory, setDailyHistory] = useState<DailyHistoryRecord[]>(() => loadDailyHistory());
 
   const handleUpdateDailyTarget = (newTarget: DailyTargetConfig) => {
     setDailyTarget(newTarget);
     saveDailyTargetConfig(newTarget);
+    const updatedHistory = updateTodayHistoryRecord(dailyProgress, newTarget);
+    setDailyHistory(updatedHistory);
   };
 
   const handleResetTodayProgress = () => {
@@ -250,8 +327,18 @@ export default function App() {
         correctBlanksToday: 0,
       };
       saveDailyProgress(reset);
+      const updatedHistory = updateTodayHistoryRecord(reset, dailyTarget);
+      setDailyHistory(updatedHistory);
       return reset;
     });
+  };
+
+  const handleStartPractice = (page?: number) => {
+    triggerHaptic('medium');
+    if (page && page >= 1 && page <= 604 && page !== currentPageNumber) {
+      loadPage(page);
+    }
+    setActiveView('mushaf');
   };
 
   // Haptics preference state
@@ -699,6 +786,13 @@ export default function App() {
       };
     });
 
+    // Award League XP for correct Ayah
+    if (correct) {
+      const xpRes = awardXpToUser(leagues, activeLeagueId, SCORING_RULES.AYAH_CORRECT, 'ayah', 'Correct Ayah Blank');
+      setLeagues(xpRes.updatedLeagues);
+      setXpNotification(xpRes.notification);
+    }
+
     // Update range stats if in active range session
     if (activeRange?.enabled) {
       setRangeStats(prev => ({
@@ -717,6 +811,10 @@ export default function App() {
         if (pageViewMode === 'double' && secondaryPageData) {
           pagesToAdd.push(secondaryPageData.pageNumber);
         }
+        // Award League XP for Page Completed
+        const pageXp = awardXpToUser(leagues, activeLeagueId, SCORING_RULES.PAGE_COMPLETED, 'page', `Medina Page ${currentPageNumber} Mastered`);
+        setLeagues(pageXp.updatedLeagues);
+        setXpNotification(pageXp.notification);
       }
       const updated: DailyProgressData = {
         ...prev,
@@ -728,6 +826,8 @@ export default function App() {
           : prev.completedPages,
       };
       saveDailyProgress(updated);
+      const updatedHistory = updateTodayHistoryRecord(updated, dailyTarget);
+      setDailyHistory(updatedHistory);
       return updated;
     });
 
@@ -810,290 +910,343 @@ export default function App() {
       id="mushaf-app-root" 
       className="h-[100dvh] max-h-[100dvh] w-screen overflow-hidden flex flex-col justify-between transition-colors duration-300 bg-amber-950/5 select-none"
     >
-      {/* Main Tablet / Mobile Cockpit Workspace - Maximize screen space */}
-      <main className="flex-1 min-h-0 w-full mx-auto px-1 sm:px-2 md:px-3 pt-1 sm:pt-1.5 pb-1 flex flex-col md:flex-row gap-1.5 md:gap-3 items-stretch justify-center overflow-hidden">
-        
-        {/* Left / Center Zone: Expanded Medina Mushaf Page(s) */}
-        <section 
-          id="tablet-mushaf-stage" 
-          className={
-            pageViewMode === 'double' && secondaryPageData
-              ? "flex-1 md:flex-[2.2] lg:flex-[2.5] h-full flex flex-col items-stretch justify-center min-h-0 min-w-0 w-full overflow-hidden"
-              : "flex-1 md:flex-[1.4] lg:flex-[1.6] h-full flex flex-col items-stretch justify-center min-h-0 min-w-0 w-full overflow-hidden"
-          }
-        >
-          {isLoadingPage || !currentPageData ? (
-            <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-amber-50/60 rounded-2xl border-2 border-amber-900/20 shadow-lg">
-              <Loader2 className="w-10 h-10 text-amber-800 animate-spin mb-3" />
-              <p className="font-bold text-amber-950 font-display tracking-wide text-sm">
-                LOADING 15-LINE MUSHAF PAGE {currentPageNumber}...
-              </p>
-              <p className="text-xs text-amber-900/70 mt-1">
-                Arranging standard 15 lines with Medina Uthmani script
-              </p>
-            </div>
-          ) : (
-            <div className="w-full h-full min-h-0 flex flex-col items-stretch justify-center">
-              
-              {/* Mobile View: Compact & Natural Word Proportions */}
-              <div className="block md:hidden w-full h-full min-h-0">
-                <div className="w-full h-full max-w-[440px] px-0 sm:px-0 mx-auto flex flex-col justify-center">
-                  {pageRenderMode === 'authentic-image' ? (
-                    <AuthenticMushafPage
-                      pageData={currentPageData}
-                      blankTargets={blankTargets}
-                      activeBlankId={activeBlankTarget?.id}
-                      onSelectBlankId={handleSelectBlankById}
-                      selectedOptionId={activeBlankTarget?.userSelectedOptionId}
-                      isAnswered={activeBlankTarget?.isAnswered || false}
-                      isCorrect={activeBlankTarget?.isCorrect || false}
-                      theme={theme}
-                      pageMargins={pageMargins}
-                      onPlayAyahAudio={handlePlayAyahAudio}
-                      onOpenSettings={() => setIsSettingsOpen(true)}
-                      mistakesCount={stats.mistakeAyahs.length}
-                      showTranslation={showTranslation}
-                      goalSummary={rightGoalSummary}
-                      onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
-                    />
+      {activeView === 'home' ? (
+        <HomeScreen
+          activeTarget={dailyTarget}
+          goalSummary={rightGoalSummary}
+          dailyProgress={dailyProgress}
+          historyRecords={dailyHistory}
+          currentPageNumber={currentPageNumber}
+          theme={theme}
+          mistakesCount={stats.mistakeAyahs.length}
+          activeLeague={activeLeague}
+          onNavigateLeagues={() => setActiveView('leagues')}
+          onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
+          onSaveTarget={handleUpdateDailyTarget}
+          onStartPractice={handleStartPractice}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenSurahPicker={() => setIsSurahPickerOpen(true)}
+          onOpenPagePicker={() => setIsPagePickerOpen(true)}
+          onOpenReview={() => setIsReviewOpen(true)}
+          onChangeTheme={handleChangeTheme}
+        />
+      ) : activeView === 'leagues' ? (
+        <LeagueDashboard
+          leagues={leagues}
+          activeLeagueId={activeLeagueId}
+          onSelectLeague={handleSelectLeague}
+          onCreateLeague={handleCreateLeague}
+          onJoinCode={handleJoinLeagueCode}
+          onStartPractice={handleStartPractice}
+          onNavigateHome={() => setActiveView('home')}
+          theme={theme}
+        />
+      ) : (
+        /* Main Tablet / Mobile Cockpit Workspace - Maximize screen space */
+        <main className="flex-1 min-h-0 w-full mx-auto px-1 sm:px-2 md:px-3 pt-1 sm:pt-1.5 pb-1 flex flex-col md:flex-row gap-1.5 md:gap-3 items-stretch justify-center overflow-hidden">
+          
+          {/* Left / Center Zone: Expanded Medina Mushaf Page(s) */}
+          <section 
+            id="tablet-mushaf-stage" 
+            className={
+              pageViewMode === 'double' && secondaryPageData
+                ? "flex-1 md:flex-[2.2] lg:flex-[2.5] h-full flex flex-col items-stretch justify-center min-h-0 min-w-0 w-full overflow-hidden"
+                : "flex-1 md:flex-[1.4] lg:flex-[1.6] h-full flex flex-col items-stretch justify-center min-h-0 min-w-0 w-full overflow-hidden"
+            }
+          >
+            {isLoadingPage || !currentPageData ? (
+              <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-amber-50/60 rounded-2xl border-2 border-amber-900/20 shadow-lg">
+                <Loader2 className="w-10 h-10 text-amber-800 animate-spin mb-3" />
+                <p className="font-bold text-amber-950 font-display tracking-wide text-sm">
+                  LOADING 15-LINE MUSHAF PAGE {currentPageNumber}...
+                </p>
+                <p className="text-xs text-amber-900/70 mt-1">
+                  Arranging standard 15 lines with Medina Uthmani script
+                </p>
+              </div>
+            ) : (
+              <div className="w-full h-full min-h-0 flex flex-col items-stretch justify-center">
+                
+                {/* Mobile View: Compact & Natural Word Proportions */}
+                <div className="block md:hidden w-full h-full min-h-0">
+                  <div className="w-full h-full max-w-[440px] px-0 sm:px-0 mx-auto flex flex-col justify-center">
+                    {pageRenderMode === 'authentic-image' ? (
+                      <AuthenticMushafPage
+                        pageData={currentPageData}
+                        blankTargets={blankTargets}
+                        activeBlankId={activeBlankTarget?.id}
+                        onSelectBlankId={handleSelectBlankById}
+                        selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                        isAnswered={activeBlankTarget?.isAnswered || false}
+                        isCorrect={activeBlankTarget?.isCorrect || false}
+                        theme={theme}
+                        pageMargins={pageMargins}
+                        onPlayAyahAudio={handlePlayAyahAudio}
+                        onOpenSettings={() => setIsSettingsOpen(true)}
+                        onNavigateHome={() => setActiveView('home')}
+                        onNavigateLeagues={() => setActiveView('leagues')}
+                        mistakesCount={stats.mistakeAyahs.length}
+                        showTranslation={showTranslation}
+                        goalSummary={rightGoalSummary}
+                        onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
+                      />
+                    ) : (
+                      <FifteenLineMushafPage
+                        pageData={currentPageData}
+                        blankTargets={blankTargets}
+                        activeBlankId={activeBlankTarget?.id}
+                        onSelectBlankId={handleSelectBlankById}
+                        selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                        isAnswered={activeBlankTarget?.isAnswered || false}
+                        isCorrect={activeBlankTarget?.isCorrect || false}
+                        theme={theme}
+                        pageMargins={pageMargins}
+                        onPlayAyahAudio={handlePlayAyahAudio}
+                        onOpenSettings={() => setIsSettingsOpen(true)}
+                        onNavigateHome={() => setActiveView('home')}
+                        onNavigateLeagues={() => setActiveView('leagues')}
+                        mistakesCount={stats.mistakeAyahs.length}
+                        showTranslation={showTranslation}
+                        goalSummary={rightGoalSummary}
+                        onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Tablet & Desktop View: 1-Page or 2-Pages Facing Spread */}
+                <div className="hidden md:flex w-full h-full min-h-0 items-center justify-center gap-2 lg:gap-3">
+                  {pageViewMode === 'double' && secondaryPageData ? (
+                    <>
+                      {/* Right Facing Page */}
+                      <div className="h-full flex-1 min-w-0 flex items-center justify-center max-w-[460px] px-0 sm:px-0">
+                        {pageRenderMode === 'authentic-image' ? (
+                          <AuthenticMushafPage
+                            pageData={currentPageData}
+                            blankTargets={blankTargets}
+                            activeBlankId={activeBlankTarget?.id}
+                            onSelectBlankId={handleSelectBlankById}
+                            selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                            isAnswered={activeBlankTarget?.isAnswered || false}
+                            isCorrect={activeBlankTarget?.isCorrect || false}
+                            theme={theme}
+                            pageMargins={pageMargins}
+                            onPlayAyahAudio={handlePlayAyahAudio}
+                            onOpenSettings={() => setIsSettingsOpen(true)}
+                            onNavigateHome={() => setActiveView('home')}
+                            onNavigateLeagues={() => setActiveView('leagues')}
+                            mistakesCount={stats.mistakeAyahs.length}
+                            showTranslation={showTranslation}
+                            goalSummary={rightGoalSummary}
+                            onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
+                          />
+                        ) : (
+                          <FifteenLineMushafPage
+                            pageData={currentPageData}
+                            blankTargets={blankTargets}
+                            activeBlankId={activeBlankTarget?.id}
+                            onSelectBlankId={handleSelectBlankById}
+                            selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                            isAnswered={activeBlankTarget?.isAnswered || false}
+                            isCorrect={activeBlankTarget?.isCorrect || false}
+                            theme={theme}
+                            pageMargins={pageMargins}
+                            onPlayAyahAudio={handlePlayAyahAudio}
+                            onOpenSettings={() => setIsSettingsOpen(true)}
+                            onNavigateHome={() => setActiveView('home')}
+                            onNavigateLeagues={() => setActiveView('leagues')}
+                            mistakesCount={stats.mistakeAyahs.length}
+                            showTranslation={showTranslation}
+                            goalSummary={rightGoalSummary}
+                            onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
+                          />
+                        )}
+                      </div>
+
+                      {/* Authentic Medina Mushaf Book Spine / Center Binding Fold */}
+                      <div className="flex flex-col items-center justify-center w-2 lg:w-3 h-[92%] relative z-10 select-none flex-shrink-0">
+                        <div className="w-[1.5px] h-full bg-gradient-to-b from-amber-950/20 via-amber-950/50 to-amber-950/20 dark:from-stone-600/30 dark:via-stone-600/70 dark:to-stone-600/30 rounded-full shadow-inner" />
+                        <div className="absolute inset-y-0 -left-2 w-2 bg-gradient-to-r from-transparent to-black/5 dark:to-black/25 pointer-events-none" />
+                        <div className="absolute inset-y-0 -right-2 w-2 bg-gradient-to-l from-transparent to-black/5 dark:to-black/25 pointer-events-none" />
+                      </div>
+
+                      {/* Left Facing Page */}
+                      <div className="h-full flex-1 min-w-0 flex items-center justify-center max-w-[460px] px-0 sm:px-0">
+                        {pageRenderMode === 'authentic-image' ? (
+                          <AuthenticMushafPage
+                            pageData={secondaryPageData}
+                            blankTargets={blankTargets}
+                            activeBlankId={activeBlankTarget?.id}
+                            onSelectBlankId={handleSelectBlankById}
+                            selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                            isAnswered={activeBlankTarget?.isAnswered || false}
+                            isCorrect={activeBlankTarget?.isCorrect || false}
+                            theme={theme}
+                            pageMargins={pageMargins}
+                            onPlayAyahAudio={handlePlayAyahAudio}
+                            onOpenSettings={() => setIsSettingsOpen(true)}
+                            onNavigateHome={() => setActiveView('home')}
+                            onNavigateLeagues={() => setActiveView('leagues')}
+                            mistakesCount={stats.mistakeAyahs.length}
+                            showTranslation={showTranslation}
+                            isSecondaryPage={true}
+                            goalSummary={leftGoalSummary || rightGoalSummary}
+                            onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
+                          />
+                        ) : (
+                          <FifteenLineMushafPage
+                            pageData={secondaryPageData}
+                            blankTargets={blankTargets}
+                            activeBlankId={activeBlankTarget?.id}
+                            onSelectBlankId={handleSelectBlankById}
+                            selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                            isAnswered={activeBlankTarget?.isAnswered || false}
+                            isCorrect={activeBlankTarget?.isCorrect || false}
+                            theme={theme}
+                            pageMargins={pageMargins}
+                            onPlayAyahAudio={handlePlayAyahAudio}
+                            onOpenSettings={() => setIsSettingsOpen(true)}
+                            onNavigateHome={() => setActiveView('home')}
+                            onNavigateLeagues={() => setActiveView('leagues')}
+                            mistakesCount={stats.mistakeAyahs.length}
+                            showTranslation={showTranslation}
+                            isSecondaryPage={true}
+                            goalSummary={leftGoalSummary || rightGoalSummary}
+                            onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
+                          />
+                        )}
+                      </div>
+                    </>
                   ) : (
-                    <FifteenLineMushafPage
-                      pageData={currentPageData}
-                      blankTargets={blankTargets}
-                      activeBlankId={activeBlankTarget?.id}
-                      onSelectBlankId={handleSelectBlankById}
-                      selectedOptionId={activeBlankTarget?.userSelectedOptionId}
-                      isAnswered={activeBlankTarget?.isAnswered || false}
-                      isCorrect={activeBlankTarget?.isCorrect || false}
-                      theme={theme}
-                      pageMargins={pageMargins}
-                      onPlayAyahAudio={handlePlayAyahAudio}
-                      onOpenSettings={() => setIsSettingsOpen(true)}
-                      mistakesCount={stats.mistakeAyahs.length}
-                      showTranslation={showTranslation}
-                      goalSummary={rightGoalSummary}
-                      onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
-                    />
+                    /* Single Page Focused Mode - Balanced Quran Book Proportion */
+                    <div className="w-full h-full min-h-0 flex items-center justify-center">
+                      <div className="w-full h-full max-w-[480px] px-0 sm:px-0 mx-auto flex flex-col justify-center">
+                        {pageRenderMode === 'authentic-image' ? (
+                          <AuthenticMushafPage
+                            pageData={currentPageData}
+                            blankTargets={blankTargets}
+                            activeBlankId={activeBlankTarget?.id}
+                            onSelectBlankId={handleSelectBlankById}
+                            selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                            isAnswered={activeBlankTarget?.isAnswered || false}
+                            isCorrect={activeBlankTarget?.isCorrect || false}
+                            theme={theme}
+                            pageMargins={pageMargins}
+                            onPlayAyahAudio={handlePlayAyahAudio}
+                            onOpenSettings={() => setIsSettingsOpen(true)}
+                            onNavigateHome={() => setActiveView('home')}
+                            onNavigateLeagues={() => setActiveView('leagues')}
+                            mistakesCount={stats.mistakeAyahs.length}
+                            showTranslation={showTranslation}
+                            goalSummary={rightGoalSummary}
+                            onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
+                          />
+                        ) : (
+                          <FifteenLineMushafPage
+                            pageData={currentPageData}
+                            blankTargets={blankTargets}
+                            activeBlankId={activeBlankTarget?.id}
+                            onSelectBlankId={handleSelectBlankById}
+                            selectedOptionId={activeBlankTarget?.userSelectedOptionId}
+                            isAnswered={activeBlankTarget?.isAnswered || false}
+                            isCorrect={activeBlankTarget?.isCorrect || false}
+                            theme={theme}
+                            pageMargins={pageMargins}
+                            onPlayAyahAudio={handlePlayAyahAudio}
+                            onOpenSettings={() => setIsSettingsOpen(true)}
+                            onNavigateHome={() => setActiveView('home')}
+                            onNavigateLeagues={() => setActiveView('leagues')}
+                            mistakesCount={stats.mistakeAyahs.length}
+                            showTranslation={showTranslation}
+                            goalSummary={rightGoalSummary}
+                            onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
+                          />
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
+
               </div>
+            )}
+          </section>
 
-              {/* Tablet & Desktop View: 1-Page or 2-Pages Facing Spread */}
-              <div className="hidden md:flex w-full h-full min-h-0 items-center justify-center gap-2 lg:gap-3">
-                {pageViewMode === 'double' && secondaryPageData ? (
-                  <>
-                    {/* Right Facing Page */}
-                    <div className="h-full flex-1 min-w-0 flex items-center justify-center max-w-[460px] px-0 sm:px-0">
-                      {pageRenderMode === 'authentic-image' ? (
-                        <AuthenticMushafPage
-                          pageData={currentPageData}
-                          blankTargets={blankTargets}
-                          activeBlankId={activeBlankTarget?.id}
-                          onSelectBlankId={handleSelectBlankById}
-                          selectedOptionId={activeBlankTarget?.userSelectedOptionId}
-                          isAnswered={activeBlankTarget?.isAnswered || false}
-                          isCorrect={activeBlankTarget?.isCorrect || false}
-                          theme={theme}
-                          pageMargins={pageMargins}
-                          onPlayAyahAudio={handlePlayAyahAudio}
-                          onOpenSettings={() => setIsSettingsOpen(true)}
-                          mistakesCount={stats.mistakeAyahs.length}
-                          showTranslation={showTranslation}
-                          goalSummary={rightGoalSummary}
-                          onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
-                        />
-                      ) : (
-                        <FifteenLineMushafPage
-                          pageData={currentPageData}
-                          blankTargets={blankTargets}
-                          activeBlankId={activeBlankTarget?.id}
-                          onSelectBlankId={handleSelectBlankById}
-                          selectedOptionId={activeBlankTarget?.userSelectedOptionId}
-                          isAnswered={activeBlankTarget?.isAnswered || false}
-                          isCorrect={activeBlankTarget?.isCorrect || false}
-                          theme={theme}
-                          pageMargins={pageMargins}
-                          onPlayAyahAudio={handlePlayAyahAudio}
-                          onOpenSettings={() => setIsSettingsOpen(true)}
-                          mistakesCount={stats.mistakeAyahs.length}
-                          showTranslation={showTranslation}
-                          goalSummary={rightGoalSummary}
-                          onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
-                        />
-                      )}
-                    </div>
+          {/* Desktop Side Zone: Interactive Side Challenge Carousel & Controls */}
+          <section 
+            id="tablet-sidebar-stage" 
+            className="hidden md:flex flex-1 max-w-full md:max-w-md lg:max-w-lg xl:max-w-xl h-full flex-col justify-between min-h-0 min-w-0"
+          >
+            <SideVerseCarousel
+              blankTargets={blankTargets}
+              activeBlankIndex={activeBlankIndex}
+              onSelectBlankIndex={handleSelectBlankIndex}
+              blankCountChoice={blankCountChoice}
+              onChangeBlankCountChoice={handleChangeBlankCountChoice}
+              selectedOption={activeBlankTarget?.selectedOption || null}
+              isAnswered={activeBlankTarget?.isAnswered || false}
+              isCorrect={activeBlankTarget?.isCorrect || false}
+              onSelectOption={handleSelectOption}
+              onNextQuestion={handleShuffleNewBlanks}
+              onResetPageBlanks={handleResetPageBlanks}
+              onPlayAudio={handlePlayAudioUrl}
+              autoPlayAudio={autoPlayAudio}
+              onToggleAutoPlayAudio={() => setAutoPlayAudio(!autoPlayAudio)}
+              currentSurah={currentSurahObj}
+              currentPageNumber={currentPageNumber}
+              pageViewMode={pageViewMode}
+              secondaryPageNumber={secondaryPageData?.pageNumber || null}
+              onNextPage={handleNextPage}
+              onPreviousPage={handlePreviousPage}
+              onOpenSurahPicker={() => setIsSurahPickerOpen(true)}
+              onOpenPagePicker={() => setIsPagePickerOpen(true)}
+              onOpenRangePicker={() => setIsPagePickerOpen(true)}
+              activeRange={activeRange}
+              autoAdvance={autoAdvance}
+              onToggleAutoAdvance={() => setAutoAdvance(!autoAdvance)}
+              challengeType={challengeType}
+              difficulty={difficulty}
+              onChangeChallengeType={handleChangeChallengeType}
+              onChangeDifficulty={handleChangeDifficulty}
+              streak={stats.currentStreak}
+              bestStreak={stats.bestStreak}
+              totalAnswered={stats.totalAnswered}
+              correctAnswers={stats.correctAnswers}
+              isPlayingAudio={!!activeAudioUrl}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+              onNavigateHome={() => setActiveView('home')}
+              onNavigateLeagues={() => setActiveView('leagues')}
+            />
+          </section>
 
-                    {/* Authentic Medina Mushaf Book Spine / Center Binding Fold */}
-                    <div className="flex flex-col items-center justify-center w-2 lg:w-3 h-[92%] relative z-10 select-none flex-shrink-0">
-                      <div className="w-[1.5px] h-full bg-gradient-to-b from-amber-950/20 via-amber-950/50 to-amber-950/20 dark:from-stone-600/30 dark:via-stone-600/70 dark:to-stone-600/30 rounded-full shadow-inner" />
-                      <div className="absolute inset-y-0 -left-2 w-2 bg-gradient-to-r from-transparent to-black/5 dark:to-black/25 pointer-events-none" />
-                      <div className="absolute inset-y-0 -right-2 w-2 bg-gradient-to-l from-transparent to-black/5 dark:to-black/25 pointer-events-none" />
-                    </div>
+          {/* Mobile Bottom Zone: Docked Bottom Carousel */}
+          <div id="mobile-docked-carousel-container" className="block md:hidden flex-shrink-0 w-full z-20">
+            <MobileBottomCarousel
+              blankTargets={blankTargets}
+              activeBlankIndex={activeBlankIndex}
+              onSelectBlankIndex={handleSelectBlankIndex}
+              selectedOption={activeBlankTarget?.selectedOption || null}
+              isAnswered={activeBlankTarget?.isAnswered || false}
+              isCorrect={activeBlankTarget?.isCorrect || false}
+              onSelectOption={handleSelectOption}
+              onNextQuestion={handleShuffleNewBlanks}
+              onResetPageBlanks={handleResetPageBlanks}
+              onPlayAudio={handlePlayAudioUrl}
+              currentSurah={currentSurahObj}
+              currentPageNumber={currentPageNumber}
+              onNextPage={handleNextPage}
+              onPreviousPage={handlePreviousPage}
+              autoAdvance={autoAdvance}
+              onToggleAutoAdvance={() => setAutoAdvance(!autoAdvance)}
+              difficulty={difficulty}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+              onNavigateHome={() => setActiveView('home')}
+              onNavigateLeagues={() => setActiveView('leagues')}
+              showTranslation={showTranslation}
+            />
+          </div>
 
-                    {/* Left Facing Page */}
-                    <div className="h-full flex-1 min-w-0 flex items-center justify-center max-w-[460px] px-0 sm:px-0">
-                      {pageRenderMode === 'authentic-image' ? (
-                        <AuthenticMushafPage
-                          pageData={secondaryPageData}
-                          blankTargets={blankTargets}
-                          activeBlankId={activeBlankTarget?.id}
-                          onSelectBlankId={handleSelectBlankById}
-                          selectedOptionId={activeBlankTarget?.userSelectedOptionId}
-                          isAnswered={activeBlankTarget?.isAnswered || false}
-                          isCorrect={activeBlankTarget?.isCorrect || false}
-                          theme={theme}
-                          pageMargins={pageMargins}
-                          onPlayAyahAudio={handlePlayAyahAudio}
-                          onOpenSettings={() => setIsSettingsOpen(true)}
-                          mistakesCount={stats.mistakeAyahs.length}
-                          showTranslation={showTranslation}
-                          isSecondaryPage={true}
-                          goalSummary={leftGoalSummary || rightGoalSummary}
-                          onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
-                        />
-                      ) : (
-                        <FifteenLineMushafPage
-                          pageData={secondaryPageData}
-                          blankTargets={blankTargets}
-                          activeBlankId={activeBlankTarget?.id}
-                          onSelectBlankId={handleSelectBlankById}
-                          selectedOptionId={activeBlankTarget?.userSelectedOptionId}
-                          isAnswered={activeBlankTarget?.isAnswered || false}
-                          isCorrect={activeBlankTarget?.isCorrect || false}
-                          theme={theme}
-                          pageMargins={pageMargins}
-                          onPlayAyahAudio={handlePlayAyahAudio}
-                          onOpenSettings={() => setIsSettingsOpen(true)}
-                          mistakesCount={stats.mistakeAyahs.length}
-                          showTranslation={showTranslation}
-                          isSecondaryPage={true}
-                          goalSummary={leftGoalSummary || rightGoalSummary}
-                          onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
-                        />
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  /* Single Page Focused Mode - Balanced Quran Book Proportion */
-                  <div className="w-full h-full min-h-0 flex items-center justify-center">
-                    <div className="w-full h-full max-w-[480px] px-0 sm:px-0 mx-auto flex flex-col justify-center">
-                      {pageRenderMode === 'authentic-image' ? (
-                        <AuthenticMushafPage
-                          pageData={currentPageData}
-                          blankTargets={blankTargets}
-                          activeBlankId={activeBlankTarget?.id}
-                          onSelectBlankId={handleSelectBlankById}
-                          selectedOptionId={activeBlankTarget?.userSelectedOptionId}
-                          isAnswered={activeBlankTarget?.isAnswered || false}
-                          isCorrect={activeBlankTarget?.isCorrect || false}
-                          theme={theme}
-                          pageMargins={pageMargins}
-                          onPlayAyahAudio={handlePlayAyahAudio}
-                          onOpenSettings={() => setIsSettingsOpen(true)}
-                          mistakesCount={stats.mistakeAyahs.length}
-                          showTranslation={showTranslation}
-                          goalSummary={rightGoalSummary}
-                          onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
-                        />
-                      ) : (
-                        <FifteenLineMushafPage
-                          pageData={currentPageData}
-                          blankTargets={blankTargets}
-                          activeBlankId={activeBlankTarget?.id}
-                          onSelectBlankId={handleSelectBlankById}
-                          selectedOptionId={activeBlankTarget?.userSelectedOptionId}
-                          isAnswered={activeBlankTarget?.isAnswered || false}
-                          isCorrect={activeBlankTarget?.isCorrect || false}
-                          theme={theme}
-                          pageMargins={pageMargins}
-                          onPlayAyahAudio={handlePlayAyahAudio}
-                          onOpenSettings={() => setIsSettingsOpen(true)}
-                          mistakesCount={stats.mistakeAyahs.length}
-                          showTranslation={showTranslation}
-                          goalSummary={rightGoalSummary}
-                          onOpenDailyTarget={() => setIsDailyTargetModalOpen(true)}
-                        />
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-            </div>
-          )}
-        </section>
-
-        {/* Desktop Side Zone: Interactive Side Challenge Carousel & Controls */}
-        <section 
-          id="tablet-sidebar-stage" 
-          className="hidden md:flex flex-1 max-w-full md:max-w-md lg:max-w-lg xl:max-w-xl h-full flex-col justify-between min-h-0 min-w-0"
-        >
-          <SideVerseCarousel
-            blankTargets={blankTargets}
-            activeBlankIndex={activeBlankIndex}
-            onSelectBlankIndex={handleSelectBlankIndex}
-            blankCountChoice={blankCountChoice}
-            onChangeBlankCountChoice={handleChangeBlankCountChoice}
-            selectedOption={activeBlankTarget?.selectedOption || null}
-            isAnswered={activeBlankTarget?.isAnswered || false}
-            isCorrect={activeBlankTarget?.isCorrect || false}
-            onSelectOption={handleSelectOption}
-            onNextQuestion={handleShuffleNewBlanks}
-            onResetPageBlanks={handleResetPageBlanks}
-            onPlayAudio={handlePlayAudioUrl}
-            autoPlayAudio={autoPlayAudio}
-            onToggleAutoPlayAudio={() => setAutoPlayAudio(!autoPlayAudio)}
-            currentSurah={currentSurahObj}
-            currentPageNumber={currentPageNumber}
-            pageViewMode={pageViewMode}
-            secondaryPageNumber={secondaryPageData?.pageNumber || null}
-            onNextPage={handleNextPage}
-            onPreviousPage={handlePreviousPage}
-            onOpenSurahPicker={() => setIsSurahPickerOpen(true)}
-            onOpenPagePicker={() => setIsPagePickerOpen(true)}
-            onOpenRangePicker={() => setIsPagePickerOpen(true)}
-            activeRange={activeRange}
-            autoAdvance={autoAdvance}
-            onToggleAutoAdvance={() => setAutoAdvance(!autoAdvance)}
-            challengeType={challengeType}
-            difficulty={difficulty}
-            onChangeChallengeType={handleChangeChallengeType}
-            onChangeDifficulty={handleChangeDifficulty}
-            streak={stats.currentStreak}
-            bestStreak={stats.bestStreak}
-            totalAnswered={stats.totalAnswered}
-            correctAnswers={stats.correctAnswers}
-            isPlayingAudio={!!activeAudioUrl}
-            onOpenSettings={() => setIsSettingsOpen(true)}
-          />
-        </section>
-
-        {/* Mobile Bottom Zone: Docked Bottom Carousel */}
-        <div id="mobile-docked-carousel-container" className="block md:hidden flex-shrink-0 w-full z-20">
-          <MobileBottomCarousel
-            blankTargets={blankTargets}
-            activeBlankIndex={activeBlankIndex}
-            onSelectBlankIndex={handleSelectBlankIndex}
-            selectedOption={activeBlankTarget?.selectedOption || null}
-            isAnswered={activeBlankTarget?.isAnswered || false}
-            isCorrect={activeBlankTarget?.isCorrect || false}
-            onSelectOption={handleSelectOption}
-            onNextQuestion={handleShuffleNewBlanks}
-            onResetPageBlanks={handleResetPageBlanks}
-            onPlayAudio={handlePlayAudioUrl}
-            currentSurah={currentSurahObj}
-            currentPageNumber={currentPageNumber}
-            onNextPage={handleNextPage}
-            onPreviousPage={handlePreviousPage}
-            autoAdvance={autoAdvance}
-            onToggleAutoAdvance={() => setAutoAdvance(!autoAdvance)}
-            difficulty={difficulty}
-            onOpenSettings={() => setIsSettingsOpen(true)}
-            showTranslation={showTranslation}
-          />
-        </div>
-
-      </main>
+        </main>
+      )}
 
       {/* Floating Recitation Player */}
       {activeAudioUrl && (
@@ -1135,7 +1288,7 @@ export default function App() {
         allowMultiBlanksPerAyah={allowMultiBlanksPerAyah}
         onToggleMultiBlanksPerAyah={handleToggleMultiBlanksPerAyah}
         theme={theme}
-        onChangeTheme={setTheme}
+        onChangeTheme={handleChangeTheme}
         onShuffleNewBlanks={handleShuffleNewBlanks}
         onResetPageBlanks={handleResetPageBlanks}
         onOpenSurahPicker={() => setIsSurahPickerOpen(true)}
@@ -1151,6 +1304,14 @@ export default function App() {
         mistakesCount={stats.mistakeAyahs.length}
         totalAnswered={stats.totalAnswered}
         correctAnswers={stats.correctAnswers}
+        onNavigateHome={() => {
+          setIsSettingsOpen(false);
+          setActiveView('home');
+        }}
+        onNavigateLeagues={() => {
+          setIsSettingsOpen(false);
+          setActiveView('leagues');
+        }}
       />
 
       {/* Daily Memorization Target Modal */}
@@ -1214,6 +1375,12 @@ export default function App() {
       <HowToPlayModal
         isOpen={isHowToPlayOpen}
         onClose={() => setIsHowToPlayOpen(false)}
+      />
+
+      {/* Floating XP Reward Notification */}
+      <XpNotificationToast
+        notification={xpNotification}
+        onClear={() => setXpNotification(null)}
       />
 
     </div>

@@ -12,20 +12,44 @@
   font-display: swap;
 }
 
+@theme {
+  --font-sans: 'Varela Round', 'Nunito', system-ui, -apple-system, sans-serif;
+  --font-display: 'Varela Round', 'Nunito', sans-serif;
+
+  /* Custom Color Palette: Light Blue, Moonstone, Saffron, Gunmetal */
+  --color-lightblue: #C3E7F1;
+  --color-moonstone: #519CAB;
+  --color-moonstone-hover: #438795;
+  --color-saffron: #FFC64F;
+  --color-saffron-hover: #f5b83d;
+  --color-gunmetal: #20373B;
+  --color-gunmetal-light: #2c4c52;
+}
+
 @layer base {
   :root {
     --font-quran: 'KFGQPC Uthmanic Script HAFS', 'Amiri Quran', serif;
     --font-arabic: 'Scheherazade New', 'Amiri', serif;
     --font-kufi: 'Reem Kufi', sans-serif;
-    --font-display: 'Cinzel', serif;
-    --font-sans: 'Plus Jakarta Sans', sans-serif;
+    --font-display: 'Varela Round', 'Nunito', sans-serif;
+    --font-sans: 'Varela Round', 'Nunito', system-ui, -apple-system, sans-serif;
+    --font-rounded: 'Varela Round', 'Nunito', sans-serif;
+
+    --color-lightblue: #C3E7F1;
+    --color-moonstone: #519CAB;
+    --color-saffron: #FFC64F;
+    --color-gunmetal: #20373B;
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: #f7f4ed;
-    color: #2c251e;
+    background-color: #edf6f9;
+    color: #20373B;
   }
+}
+
+.font-rounded {
+  font-family: var(--font-rounded);
 }
 
 .font-quran {
@@ -64,6 +88,15 @@
   background-image: 
     radial-gradient(#252c30 0.75px, transparent 0.75px),
     radial-gradient(#1f2529 0.75px, #171b1e 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+.mushaf-paper-moonstone {
+  background-color: #f7fcfe;
+  background-image: 
+    radial-gradient(#c3e7f1 0.85px, transparent 0.85px),
+    radial-gradient(#dcf2f7 0.85px, #f7fcfe 0.85px);
   background-size: 30px 30px;
   background-position: 0 0, 15px 15px;
 }

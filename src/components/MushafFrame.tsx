@@ -18,6 +18,16 @@ export const MushafFrame: React.FC<MushafFrameProps> = ({
 }) => {
   // Theme color maps
   const themeStyles = {
+    moonstone: {
+      outerBg: "bg-[#edf6f9]",
+      pageBg: "mushaf-paper-moonstone text-[#20373B] border-[#519CAB]/30",
+      borderGold: "#FFC64F",
+      borderInner: "border-[#519CAB]/40",
+      accentBg: "bg-[#C3E7F1]/20",
+      headerText: "text-[#20373B]",
+      ornamentStroke: "#519CAB",
+      glow: "shadow-2xl shadow-[#519CAB]/15"
+    },
     parchment: {
       outerBg: "bg-amber-100/40",
       pageBg: "mushaf-paper text-stone-900 border-amber-900/30",

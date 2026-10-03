@@ -1,7 +1,7 @@
 import React from 'react';
 import { Ayah, BlankTarget, MushafTheme, QuranPageData, Surah, PageFifteenLine, PageLineItem, PageMarginConfig, GoalProgressSummary } from '../types';
 import { toArabicDigits } from '../services/quranApi';
-import { Settings } from 'lucide-react';
+import { Settings, Home, Trophy } from 'lucide-react';
 import { formatPageIntoFifteenLines } from '../utils/fifteenLineEngine';
 import { applyKashidaToLine, isLineCentered, stripTajweedMarkers } from '../utils/kashida';
 import { triggerHaptic } from '../utils/haptics';
@@ -21,6 +21,8 @@ interface FifteenLineMushafPageProps {
   onSelectBlankId?: (blankId: string) => void;
   onSelectBlank?: (blankId: string) => void;
   onOpenSettings?: () => void;
+  onNavigateHome?: () => void;
+  onNavigateLeagues?: () => void;
   mistakesCount?: number;
   showTranslation?: boolean;
   isSecondaryPage?: boolean;
@@ -42,6 +44,8 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
   onSelectBlankId,
   onSelectBlank,
   onOpenSettings,
+  onNavigateHome,
+  onNavigateLeagues,
   mistakesCount,
   showTranslation = false,
   isSecondaryPage = false,
@@ -73,6 +77,23 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
 
   // Theme styling map
   const themeClasses = {
+    moonstone: {
+      bg: 'bg-[#f4fafc] text-[#20373B]',
+      frameBg: 'bg-[#f4fafc]',
+      outerBorder: 'border-[#20373B]',
+      innerBorder: 'border-[#519CAB]/60',
+      cornerOrnament: 'border-[#20373B] bg-[#f4fafc]',
+      marginText: 'text-[#20373B]',
+      headerRule: 'border-[#519CAB]/30',
+      verseColor: 'text-[#20373B]',
+      markerColor: 'text-[#519CAB]',
+      pageNumber: 'text-[#20373B]',
+      surahBannerBg: 'bg-[#e2f3f7] border-[#20373B]',
+      bismillahColor: 'text-[#20373B]',
+      blankSlotBg: 'bg-[#daf1f6]',
+      blankSlotActiveBg: 'bg-[#c3e7f1]',
+      blankSlotBorder: 'border-[#519CAB]'
+    },
     parchment: {
       bg: 'bg-[#fcf9f2] text-[#1c1815]',
       frameBg: 'bg-[#fcf9f2]',
@@ -183,26 +204,60 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
           {headerSurahName}
         </div>
 
-        {onOpenSettings && (
-          <button
-            id={`page-header-settings-btn-${pageNumber}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              triggerHaptic('light');
-              onOpenSettings();
-            }}
-            className="flex-shrink-0 p-1 sm:p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-current transition-all cursor-pointer flex items-center justify-center relative active:scale-95 mx-2"
-            title="Open Settings"
-            aria-label="Settings"
-          >
-            <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-current opacity-80 hover:opacity-100" />
-            {mistakesCount !== undefined && mistakesCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[8px] font-bold flex items-center justify-center leading-none shadow-xs">
-                {mistakesCount}
-              </span>
-            )}
-          </button>
-        )}
+        <div className="flex items-center gap-1 mx-2">
+          {onNavigateHome && (
+            <button
+              id={`page-header-home-btn-${pageNumber}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerHaptic('light');
+                onNavigateHome();
+              }}
+              className="flex-shrink-0 p-1 sm:p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-current transition-all cursor-pointer flex items-center justify-center relative active:scale-95"
+              title="Return to Home Dashboard"
+              aria-label="Home"
+            >
+              <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-current opacity-80 hover:opacity-100" />
+            </button>
+          )}
+
+          {onNavigateLeagues && (
+            <button
+              id={`page-header-leagues-btn-${pageNumber}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerHaptic('light');
+                onNavigateLeagues();
+              }}
+              className="flex-shrink-0 p-1 sm:p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-amber-700 dark:text-amber-400 transition-all cursor-pointer flex items-center justify-center relative active:scale-95"
+              title="Open Social Leagues & Leaderboard"
+              aria-label="Leagues"
+            >
+              <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 opacity-90 hover:opacity-100" />
+            </button>
+          )}
+
+          {onOpenSettings && (
+            <button
+              id={`page-header-settings-btn-${pageNumber}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerHaptic('light');
+                onOpenSettings();
+              }}
+              className="flex-shrink-0 p-1 sm:p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-current transition-all cursor-pointer flex items-center justify-center relative active:scale-95"
+              title="Open Settings"
+              aria-label="Settings"
+            >
+              <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-current opacity-80 hover:opacity-100" />
+              {mistakesCount !== undefined && mistakesCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[8px] font-bold flex items-center justify-center leading-none shadow-xs">
+                  {mistakesCount}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
 
         <div className="font-serif font-bold text-xs sm:text-sm tracking-tight flex-1 text-right truncate">
           {hizbString || `Juz' ${juzNumber}`}

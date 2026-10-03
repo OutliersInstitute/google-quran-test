@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   X, Settings, Sparkles, Layers, Sliders, Volume2, VolumeX, Eye, EyeOff, 
   RotateCcw, Shuffle, BookOpen, Bookmark, HelpCircle, Check, ArrowRight, 
-  Zap, Palette, ShieldAlert, Award, Compass, FileText, Smartphone, Maximize2, Target
+  Zap, Palette, ShieldAlert, Award, Compass, FileText, Smartphone, Maximize2, Target, Home, Trophy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChallengeType, DifficultyLevel, MushafTheme, PageViewMode, PageRenderMode, Surah, PageRangeConfig, PageMarginConfig, PageMarginPreset, DailyTargetConfig, GoalProgressSummary } from '../types';
@@ -64,6 +64,8 @@ interface SettingsModalProps {
   mistakesCount: number;
   totalAnswered: number;
   correctAnswers: number;
+  onNavigateHome?: () => void;
+  onNavigateLeagues?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -111,6 +113,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   mistakesCount,
   totalAnswered,
   correctAnswers,
+  onNavigateHome,
+  onNavigateLeagues,
 }) => {
   if (!isOpen) return null;
 
@@ -168,6 +172,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </span>
               </div>
               <div className="flex items-center gap-2">
+                {onNavigateHome && (
+                  <button
+                    onClick={() => { onClose(); onNavigateHome(); }}
+                    className="px-2.5 py-1 rounded-lg bg-amber-900/15 hover:bg-amber-900/25 text-amber-950 dark:text-amber-200 font-bold text-[11px] cursor-pointer flex items-center gap-1"
+                  >
+                    <Home className="w-3.5 h-3.5" />
+                    <span>Home</span>
+                  </button>
+                )}
+                {onNavigateLeagues && (
+                  <button
+                    onClick={() => { onClose(); onNavigateLeagues(); }}
+                    className="px-2.5 py-1 rounded-lg bg-amber-900/15 hover:bg-amber-900/25 text-amber-950 dark:text-amber-200 font-bold text-[11px] cursor-pointer flex items-center gap-1"
+                  >
+                    <Trophy className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+                    <span>Leagues</span>
+                  </button>
+                )}
                 <button
                   onClick={() => { onClose(); onOpenPagePicker(); }}
                   className="px-2.5 py-1 rounded-lg bg-amber-800 hover:bg-amber-700 text-white font-bold text-[11px] cursor-pointer shadow-xs"
@@ -713,7 +735,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <Palette className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
                 Mushaf Aesthetic & Color Scheme
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {/* Moonstone & Saffron Palette */}
+                <button
+                  id="settings-theme-moonstone-btn"
+                  onClick={() => onChangeTheme('moonstone')}
+                  className={`p-2.5 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
+                    theme === 'moonstone' ? 'border-[#519CAB] ring-2 ring-[#519CAB]/30 bg-[#edf6f9] text-[#20373B]' : 'border-[#519CAB]/20 bg-[#edf6f9]/50 text-[#20373B] hover:border-[#519CAB]/40'
+                  }`}
+                >
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#20373B] via-[#519CAB] to-[#FFC64F] border border-[#519CAB] shadow-xs" />
+                  <span className="text-[11px] font-bold">Moonstone</span>
+                </button>
+
                 {/* Parchment */}
                 <button
                   id="settings-theme-parchment-btn"

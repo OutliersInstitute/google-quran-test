@@ -77,7 +77,7 @@ export type ChallengeType = 'full-ayah' | 'portion-ayah' | 'next-ayah' | 'multi-
 
 export type DifficultyLevel = 'easy' | 'medium' | 'hafiz';
 
-export type MushafTheme = 'parchment' | 'emerald' | 'midnight' | 'classic-white';
+export type MushafTheme = 'moonstone' | 'parchment' | 'emerald' | 'midnight' | 'classic-white';
 
 export type PageMarginPreset = 'compact' | 'standard' | 'spacious' | 'custom';
 
@@ -195,4 +195,93 @@ export interface GoalProgressSummary {
   spreadPositionText?: string;
   relativePositionPercent: number;
   isOnTargetPage: boolean;
+}
+
+export type AppView = 'home' | 'mushaf' | 'leagues';
+
+export type LeagueChallengeStructure = 'daily' | 'weekly' | 'monthly' | 'fixed-goal';
+export type LeagueRangeType = 'juz' | 'surahs' | 'single-surah' | 'pages-range' | 'ayahs-count';
+
+export interface LeagueTarget {
+  rangeType: LeagueRangeType;
+  description: string;
+  targetAmount: number;
+  targetUnit: 'surahs' | 'pages' | 'ayahs' | 'juz';
+  startSurah?: number;
+  endSurah?: number;
+  startSurahName?: string;
+  endSurahName?: string;
+  selectedJuz?: number;
+  startPage?: number;
+  endPage?: number;
+}
+
+export interface LeagueMember {
+  id: string;
+  name: string;
+  isCurrentUser: boolean;
+  avatarColor: string;
+  avatarEmoji?: string;
+  points: number; // XP
+  todayPoints: number;
+  rank: number;
+  streakDays: number;
+  completedToday: boolean;
+  progressCurrent: number;
+  progressTarget: number;
+  progressPercent: number;
+  dailyActivity: { [date: string]: number };
+  statusMessage?: string;
+  joinedDate: string;
+}
+
+export interface LeagueActivityItem {
+  id: string;
+  memberName: string;
+  isCurrentUser: boolean;
+  actionText: string;
+  pointsEarned: number;
+  timestamp: number;
+  type: 'ayah' | 'page' | 'streak' | 'target_met' | 'joined';
+}
+
+export interface League {
+  id: string;
+  name: string;
+  description: string;
+  inviteCode: string;
+  creatorName: string;
+  isUserCreator: boolean;
+  createdAt: string;
+  endDate?: string;
+  durationDays?: number;
+  challengeStructure: LeagueChallengeStructure;
+  target: LeagueTarget;
+  members: LeagueMember[];
+  activityFeed: LeagueActivityItem[];
+}
+
+export interface XpEventNotification {
+  id: string;
+  points: number;
+  label: string;
+  timestamp: number;
+}
+
+export interface DailyHistoryRecord {
+  date: string; // YYYY-MM-DD
+  pagesCompleted: number;
+  pagesList: number[];
+  blanksAnswered: number;
+  blanksCorrect: number;
+  targetMet: boolean;
+  targetTitle: string;
+}
+
+export interface MemorizationHistoryStats {
+  totalDaysActive: number;
+  totalCompletedPages: number;
+  totalBlanksAnswered: number;
+  overallAccuracy: number;
+  historyRecords: DailyHistoryRecord[];
 }
