@@ -78,20 +78,20 @@ export const FifteenLineMushafPage: React.FC<FifteenLineMushafPageProps> = ({
   // Theme styling map
   const themeClasses = {
     moonstone: {
-      bg: 'bg-[#f4fafc] text-[#20373B]',
-      frameBg: 'bg-[#f4fafc]',
+      bg: 'bg-white text-[#20373B]',
+      frameBg: 'bg-white',
       outerBorder: 'border-[#20373B]',
       innerBorder: 'border-[#519CAB]/60',
-      cornerOrnament: 'border-[#20373B] bg-[#f4fafc]',
+      cornerOrnament: 'border-[#20373B] bg-white',
       marginText: 'text-[#20373B]',
       headerRule: 'border-[#519CAB]/30',
       verseColor: 'text-[#20373B]',
       markerColor: 'text-[#519CAB]',
       pageNumber: 'text-[#20373B]',
-      surahBannerBg: 'bg-[#e2f3f7] border-[#20373B]',
+      surahBannerBg: 'bg-white border-2 border-[#519CAB]/30',
       bismillahColor: 'text-[#20373B]',
-      blankSlotBg: 'bg-[#daf1f6]',
-      blankSlotActiveBg: 'bg-[#c3e7f1]',
+      blankSlotBg: 'bg-stone-50',
+      blankSlotActiveBg: 'bg-[#FFC64F]/25',
       blankSlotBorder: 'border-[#519CAB]'
     },
     parchment: {

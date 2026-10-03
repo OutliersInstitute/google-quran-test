@@ -45,14 +45,14 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
   // Theme styling
   const themeClasses = {
     moonstone: {
-      bg: 'bg-[#edf6f9] text-[#20373B]',
-      headerBg: 'bg-white/90 border-[#519CAB]/20',
+      bg: 'bg-white text-[#20373B]',
+      headerBg: 'bg-white/95 backdrop-blur-md border-[#519CAB]/20',
       cardBg: 'bg-white border-[#519CAB]/20 shadow-sm',
-      cardHover: 'hover:border-[#519CAB]/40 hover:bg-[#f7fcfe]',
+      cardHover: 'hover:border-[#519CAB]/40 hover:bg-stone-50',
       accentBg: 'bg-[#519CAB] text-white hover:bg-[#438795]',
       accentText: 'text-[#519CAB]',
       progressFill: 'from-[#519CAB] via-[#519CAB] to-[#FFC64F]',
-      subtleBox: 'bg-[#C3E7F1]/25 border-[#519CAB]/15',
+      subtleBox: 'bg-white border border-[#519CAB]/25',
     },
     parchment: {
       bg: 'bg-[#faf7f0] text-stone-900',
@@ -104,33 +104,33 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
     <div className={`min-h-full w-full overflow-y-auto ${themeClasses.bg} pb-16 transition-colors duration-300`}>
       
       {/* Top Header Navigation */}
-      <header className={`sticky top-0 z-30 w-full backdrop-blur-md border-b px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between transition-colors ${themeClasses.headerBg}`}>
+      <header className={`sticky top-0 z-30 w-full backdrop-blur-md border-b px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-2 transition-colors ${themeClasses.headerBg}`}>
         
         {/* Left: Back to Dashboard & League Title */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1">
           <button
             onClick={() => {
               triggerHaptic('light');
               onNavigateHome();
             }}
-            className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 opacity-80 hover:opacity-100 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+            className="p-1.5 sm:p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 opacity-80 hover:opacity-100 transition-all cursor-pointer flex items-center gap-1 text-xs font-bold flex-shrink-0"
             title="Back to Home Dashboard"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Home</span>
           </button>
 
-          <div className="h-5 w-[1px] bg-black/10 dark:bg-white/10" />
+          <div className="h-4 sm:h-5 w-[1px] bg-black/10 dark:bg-white/10 flex-shrink-0" />
 
           {/* League Dropdown Selector */}
-          <div className="relative">
+          <div className="relative min-w-0 max-w-[140px] xs:max-w-[200px] sm:max-w-xs md:max-w-md">
             <select
               value={activeLeague.id}
               onChange={(e) => {
                 triggerHaptic('light');
                 onSelectLeague(e.target.value);
               }}
-              className="appearance-none bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl px-3 py-1.5 pr-8 font-display font-bold text-sm sm:text-base border border-amber-900/10 dark:border-stone-700 cursor-pointer focus:outline-none"
+              className="appearance-none w-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl px-2.5 sm:px-3 py-1.5 pr-7 sm:pr-8 font-display font-bold text-xs sm:text-base border border-black/10 dark:border-white/10 cursor-pointer focus:outline-none truncate"
             >
               {leagues.map((l) => (
                 <option key={l.id} value={l.id} className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100">
@@ -138,21 +138,23 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
                 </option>
               ))}
             </select>
-            <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
+            <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
           </div>
         </div>
 
         {/* Right: Quick League Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           <button
             onClick={() => {
               triggerHaptic('light');
               setIsJoinOpen(true);
             }}
-            className="px-2.5 py-1.5 rounded-xl border border-amber-900/15 dark:border-stone-700 hover:bg-black/5 dark:hover:bg-white/5 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+            className="px-2 sm:px-2.5 py-1.5 rounded-xl border border-black/10 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/5 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
+            title="Join with invite code"
           >
-            <KeyRound className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+            <KeyRound className="w-3.5 h-3.5 text-[#519CAB]" />
             <span className="hidden sm:inline">Join with Code</span>
+            <span className="inline sm:hidden">Join</span>
           </button>
 
           <button
@@ -160,10 +162,11 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
               triggerHaptic('medium');
               setIsCreateOpen(true);
             }}
-            className="px-3 py-1.5 rounded-xl bg-amber-800 text-amber-50 hover:bg-amber-700 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs transition-all cursor-pointer ${themeClasses.accentBg}`}
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Create League</span>
+            <span className="hidden sm:inline">Create League</span>
+            <span className="inline sm:hidden">Create</span>
           </button>
         </div>
       </header>
@@ -251,14 +254,16 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
               
               {/* Member overview */}
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-amber-800 text-amber-100 flex items-center justify-center text-2xl font-bold shadow-md">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-bold shadow-md flex-shrink-0 ${
+                  theme === 'moonstone' ? 'bg-[#519CAB] text-white' : theme === 'emerald' ? 'bg-emerald-800 text-white' : theme === 'midnight' ? 'bg-amber-500 text-stone-950' : 'bg-amber-800 text-amber-100'
+                }`}>
                   {currentUserMember.avatarEmoji || '🌟'}
                 </div>
 
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs uppercase font-bold tracking-wider text-amber-800 dark:text-amber-400">
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`text-xs uppercase font-bold tracking-wider ${themeClasses.accentText}`}>
                       Your League Standing
                     </span>
                     {userTier && (
@@ -268,13 +273,13 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
                     )}
                   </div>
 
-                  <div className="text-xl sm:text-2xl font-display font-extrabold flex items-center gap-2">
+                  <div className="text-lg sm:text-2xl font-display font-extrabold flex items-center gap-2 flex-wrap">
                     <span>Rank #{currentUserMember.rank}</span>
-                    <span className="text-base font-normal opacity-60">of {activeLeague.members.length} members</span>
+                    <span className="text-xs sm:text-base font-normal opacity-60">of {activeLeague.members.length} members</span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs">
-                    <span className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                  <div className="flex items-center gap-x-2.5 sm:gap-x-3 gap-y-1 text-xs flex-wrap">
+                    <span className={`font-mono font-bold ${theme === 'moonstone' ? 'text-[#20373B]' : 'text-amber-700 dark:text-amber-400'}`}>
                       {currentUserMember.points} Total XP
                     </span>
                     <span className="opacity-60">•</span>
@@ -284,7 +289,7 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
                     <span className="opacity-60">•</span>
                     <span className="text-orange-600 dark:text-orange-400 font-bold flex items-center gap-1">
                       <Flame className="w-3.5 h-3.5 fill-current" />
-                      <span>{currentUserMember.streakDays}-day streak</span>
+                      <span>{currentUserMember.streakDays}d streak</span>
                     </span>
                   </div>
                 </div>
@@ -439,18 +444,20 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
                       </div>
 
                       {/* Name & status */}
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-display font-bold text-sm truncate">
+                          <span className="font-display font-bold text-xs sm:text-sm truncate max-w-[120px] xs:max-w-[180px] sm:max-w-none">
                             {member.name}
                           </span>
                           {member.isCurrentUser && (
-                            <span className="px-1.5 py-0.2 rounded-md bg-amber-800 text-amber-50 text-[10px] font-bold">
+                            <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
+                              theme === 'moonstone' ? 'bg-[#519CAB] text-white' : 'bg-amber-800 text-amber-50'
+                            }`}>
                               You
                             </span>
                           )}
                         </div>
-                        <div className="text-[11px] opacity-70 truncate max-w-[180px] sm:max-w-xs">
+                        <div className="text-[10px] sm:text-[11px] opacity-70 truncate max-w-[130px] xs:max-w-[200px] sm:max-w-xs">
                           {member.statusMessage || `Progress: ${member.progressCurrent}/${member.progressTarget} ${activeLeague.target.targetUnit}`}
                         </div>
                       </div>
@@ -479,7 +486,7 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
                     </div>
 
                     {/* Right: Progress % & Points */}
-                    <div className="flex items-center gap-3 sm:gap-6 flex-shrink-0 text-right">
+                    <div className="flex items-center gap-2 sm:gap-6 flex-shrink-0 text-right">
                       
                       {/* Progress bar preview */}
                       <div className="hidden md:flex flex-col items-end gap-1 w-24">
@@ -488,25 +495,34 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
                         </span>
                         <div className="w-full h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-amber-600 rounded-full"
+                            className={`h-full rounded-full ${theme === 'moonstone' ? 'bg-[#519CAB]' : 'bg-amber-600'}`}
                             style={{ width: `${Math.max(member.progressPercent, 4)}%` }}
                           />
                         </div>
                       </div>
 
-                      {/* Points (XP) */}
+                      {/* Points (XP) & Mobile Streak */}
                       <div className="text-right">
-                        <div className="font-mono font-black text-sm sm:text-base text-amber-800 dark:text-amber-400 tabular-nums">
-                          {member.points} <span className="text-[11px] font-sans font-bold">XP</span>
+                        <div className={`font-mono font-black text-xs sm:text-base tabular-nums ${
+                          theme === 'moonstone' ? 'text-[#20373B]' : 'text-amber-800 dark:text-amber-400'
+                        }`}>
+                          {member.points} <span className="text-[10px] sm:text-[11px] font-sans font-bold">XP</span>
                         </div>
-                        {member.todayPoints > 0 && (
-                          <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                            +{member.todayPoints} today
-                          </div>
-                        )}
+                        <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                          {/* Compact streak on mobile */}
+                          <span className="sm:hidden font-mono text-[10px] text-orange-600 font-bold flex items-center gap-0.5">
+                            <Flame className="w-2.5 h-2.5 fill-current" />
+                            {member.streakDays}d
+                          </span>
+                          {member.todayPoints > 0 && (
+                            <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                              +{member.todayPoints}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      <ChevronRight className="w-4 h-4 opacity-40" />
+                      <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 opacity-40" />
                     </div>
 
                   </div>

@@ -31,7 +31,7 @@ export const MushafGoalProgressBar: React.FC<MushafGoalProgressBarProps> = ({
   // Theme-specific styles
   const styles = {
     moonstone: {
-      barBg: 'bg-[#C3E7F1]/30',
+      barBg: 'bg-stone-100',
       fillGradient: 'from-[#519CAB] via-[#519CAB] to-[#FFC64F]',
       completedGradient: 'from-[#519CAB] via-[#FFC64F] to-[#519CAB]',
       textPrimary: 'text-[#20373B]',

@@ -227,13 +227,13 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
         {/* Row 1: Page Stepper, Range Indicator & Surah Jump */}
         <div className="flex items-center justify-between gap-1 flex-wrap sm:flex-nowrap">
           {/* Page Navigator */}
-          <div className="flex items-center gap-1 bg-[#C3E7F1]/30 dark:bg-stone-800 p-1 rounded-xl border border-[#519CAB]/25">
+          <div className="flex items-center gap-1 bg-white dark:bg-stone-800 p-1 rounded-xl border border-[#519CAB]/25 shadow-2xs">
             {/* RTL Quran Navigation: Back/Left arrow advances forward to Next Page */}
             <button
               id="side-next-page-btn"
               onClick={onNextPage}
               disabled={currentPageNumber >= 604}
-              className="p-1 rounded-lg hover:bg-[#519CAB] hover:text-white disabled:opacity-30 text-[#20373B] dark:text-[#C3E7F1] transition-colors cursor-pointer"
+              className="p-1 rounded-lg hover:bg-[#519CAB] hover:text-white disabled:opacity-30 text-[#20373B] dark:text-stone-200 transition-colors cursor-pointer"
               title="Next Quran Page (Advance forward in RTL)"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -257,7 +257,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
               id="side-prev-page-btn"
               onClick={onPreviousPage}
               disabled={currentPageNumber <= 1}
-              className="p-1 rounded-lg hover:bg-[#519CAB] hover:text-white disabled:opacity-30 text-[#20373B] dark:text-[#C3E7F1] transition-colors cursor-pointer"
+              className="p-1 rounded-lg hover:bg-[#519CAB] hover:text-white disabled:opacity-30 text-[#20373B] dark:text-stone-200 transition-colors cursor-pointer"
               title="Previous Quran Page (Return toward Page 1)"
             >
               <ChevronRight className="w-4 h-4" />
@@ -280,7 +280,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
               <button
                 id="side-define-range-btn"
                 onClick={onOpenRangePicker}
-                className="flex items-center gap-1 px-2 py-1 rounded-xl bg-[#C3E7F1]/30 dark:bg-stone-800 hover:bg-[#C3E7F1]/60 text-[#20373B] dark:text-stone-200 text-[11px] font-bold border border-[#519CAB]/20 shadow-2xs cursor-pointer transition-all"
+                className="flex items-center gap-1 px-2 py-1 rounded-xl bg-white dark:bg-stone-800 hover:bg-stone-50 text-[#20373B] dark:text-stone-200 text-[11px] font-bold border border-[#519CAB]/20 shadow-2xs cursor-pointer transition-all"
                 title="Define a start & end page range to test sequentially"
               >
                 <Target className="w-3 h-3 text-[#519CAB]" />
@@ -307,7 +307,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                   triggerHaptic('light');
                   onNavigateHome();
                 }}
-                className="p-1 px-2 rounded-xl bg-[#C3E7F1]/30 hover:bg-[#C3E7F1]/60 text-[#20373B] dark:text-[#C3E7F1] border border-[#519CAB]/20 shadow-xs transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+                className="p-1 px-2 rounded-xl bg-white hover:bg-stone-50 text-[#20373B] border border-[#519CAB]/20 shadow-xs transition-all cursor-pointer flex items-center gap-1 active:scale-95"
                 title="Return to Home Dashboard & Goals"
               >
                 <Home className="w-3.5 h-3.5 text-[#519CAB]" />
@@ -323,7 +323,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                   triggerHaptic('light');
                   onNavigateLeagues();
                 }}
-                className="p-1 px-2 rounded-xl bg-[#C3E7F1]/30 hover:bg-[#C3E7F1]/60 text-[#20373B] dark:text-[#C3E7F1] border border-[#519CAB]/20 shadow-xs transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+                className="p-1 px-2 rounded-xl bg-white hover:bg-stone-50 text-[#20373B] border border-[#519CAB]/20 shadow-xs transition-all cursor-pointer flex items-center gap-1 active:scale-95"
                 title="Open Social Leagues & Leaderboards"
               >
                 <Trophy className="w-3.5 h-3.5 text-[#FFC64F]" />
@@ -336,7 +336,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
               <button
                 id="side-open-settings-btn"
                 onClick={onOpenSettings}
-                className="p-1 px-2 rounded-xl bg-[#C3E7F1]/30 hover:bg-[#C3E7F1]/60 text-[#20373B] dark:text-[#C3E7F1] border border-[#519CAB]/20 shadow-xs transition-all cursor-pointer flex items-center gap-1"
+                className="p-1 px-2 rounded-xl bg-white hover:bg-stone-50 text-[#20373B] border border-[#519CAB]/20 shadow-xs transition-all cursor-pointer flex items-center gap-1"
                 title="Open Settings & Mode Controls"
               >
                 <Settings className="w-3.5 h-3.5 text-[#519CAB]" />
@@ -669,8 +669,8 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                   const optionLetter = ['A', 'B', 'C', 'D'][idx] || `${idx + 1}`;
                   const hotkeyNumber = `${idx + 1}`;
 
-                  let cardStyle = "bg-white dark:bg-stone-800 hover:bg-[#edf6f9] border-[#519CAB]/30 text-[#20373B] dark:text-stone-100";
-                  let badgeStyle = "bg-[#C3E7F1]/50 text-[#20373B] border-[#519CAB]/30";
+                  let cardStyle = "bg-white dark:bg-stone-800 hover:bg-stone-50 border-[#519CAB]/30 text-[#20373B] dark:text-stone-100";
+                  let badgeStyle = "bg-stone-100 text-[#20373B] border-[#519CAB]/30";
 
                   if (activeTarget?.isAnswered) {
                     if (option.isCorrect) {

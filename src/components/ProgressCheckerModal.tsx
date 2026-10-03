@@ -56,7 +56,7 @@ export const ProgressCheckerModal: React.FC<ProgressCheckerModalProps> = ({
       <div 
         className={`w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden ${
           isMoonstone 
-            ? 'bg-[#edf6f9] text-[#20373B] border-[#519CAB]/30' 
+            ? 'bg-white text-[#20373B] border-[#519CAB]/30' 
             : 'bg-[#faf7f0] dark:bg-[#161b20] text-stone-900 dark:text-stone-100 border-amber-900/20 dark:border-stone-800'
         }`}
         onClick={(e) => e.stopPropagation()}

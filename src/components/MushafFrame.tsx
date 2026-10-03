@@ -19,11 +19,11 @@ export const MushafFrame: React.FC<MushafFrameProps> = ({
   // Theme color maps
   const themeStyles = {
     moonstone: {
-      outerBg: "bg-[#edf6f9]",
+      outerBg: "bg-white",
       pageBg: "mushaf-paper-moonstone text-[#20373B] border-[#519CAB]/30",
       borderGold: "#FFC64F",
       borderInner: "border-[#519CAB]/40",
-      accentBg: "bg-[#C3E7F1]/20",
+      accentBg: "bg-white",
       headerText: "text-[#20373B]",
       ornamentStroke: "#519CAB",
       glow: "shadow-2xl shadow-[#519CAB]/15"

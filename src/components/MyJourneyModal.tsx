@@ -50,7 +50,7 @@ export const MyJourneyModal: React.FC<MyJourneyModalProps> = ({
       <div 
         className={`w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden ${
           isMoonstone 
-            ? 'bg-[#edf6f9] text-[#20373B] border-[#519CAB]/30' 
+            ? 'bg-white text-[#20373B] border-[#519CAB]/30' 
             : 'bg-[#faf7f0] dark:bg-[#161b20] text-stone-900 dark:text-stone-100 border-amber-900/20 dark:border-stone-800'
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -218,8 +218,8 @@ export const MyJourneyModal: React.FC<MyJourneyModalProps> = ({
                   onClose();
                   onOpenSurahPicker();
                 }}
-                className={`px-2.5 py-1 rounded-lg font-bold cursor-pointer ${
-                  isMoonstone ? 'bg-[#C3E7F1]/50 hover:bg-[#C3E7F1] text-[#20373B]' : 'bg-amber-900/10 hover:bg-amber-900/20 text-amber-950 dark:text-amber-300'
+                className={`px-2.5 py-1 rounded-lg font-bold cursor-pointer transition-colors ${
+                  isMoonstone ? 'bg-stone-100 hover:bg-stone-200 text-[#20373B] border border-[#519CAB]/20' : 'bg-amber-900/10 hover:bg-amber-900/20 text-amber-950 dark:text-amber-300'
                 }`}
               >
                 Surah Index
@@ -229,8 +229,8 @@ export const MyJourneyModal: React.FC<MyJourneyModalProps> = ({
                   onClose();
                   onOpenPagePicker();
                 }}
-                className={`px-2.5 py-1 rounded-lg font-bold cursor-pointer ${
-                  isMoonstone ? 'bg-[#C3E7F1]/50 hover:bg-[#C3E7F1] text-[#20373B]' : 'bg-amber-900/10 hover:bg-amber-900/20 text-amber-950 dark:text-amber-300'
+                className={`px-2.5 py-1 rounded-lg font-bold cursor-pointer transition-colors ${
+                  isMoonstone ? 'bg-stone-100 hover:bg-stone-200 text-[#20373B] border border-[#519CAB]/20' : 'bg-amber-900/10 hover:bg-amber-900/20 text-amber-950 dark:text-amber-300'
                 }`}
               >
                 Page Picker

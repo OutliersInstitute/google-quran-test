@@ -31,14 +31,24 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
     return { key, dayName, dayNum };
   });
 
+  const isMoonstone = theme === 'moonstone';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-md rounded-3xl bg-[#faf7f0] dark:bg-[#161b20] text-stone-900 dark:text-stone-100 border border-amber-900/20 dark:border-stone-800 shadow-2xl overflow-hidden"
+        className={`w-full max-w-md rounded-3xl shadow-2xl overflow-hidden ${
+          isMoonstone 
+            ? 'bg-white text-[#20373B] border-2 border-[#519CAB]/30' 
+            : 'bg-[#faf7f0] dark:bg-[#161b20] text-stone-900 dark:text-stone-100 border border-amber-900/20 dark:border-stone-800'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-amber-900/10 dark:border-stone-800 bg-[#f4eee0] dark:bg-[#12161a]">
+        <div className={`flex items-center justify-between px-6 py-4 border-b ${
+          isMoonstone 
+            ? 'bg-white border-[#519CAB]/20 text-[#20373B]' 
+            : 'border-amber-900/10 dark:border-stone-800 bg-[#f4eee0] dark:bg-[#12161a]'
+        }`}>
           <span className="text-xs font-bold uppercase tracking-wider opacity-75">
             League Member Profile
           </span>
@@ -66,7 +76,9 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
               <div className="flex items-center gap-2">
                 <h3 className="font-display font-bold text-lg">{member.name}</h3>
                 {member.isCurrentUser && (
-                  <span className="px-2 py-0.5 rounded-full bg-amber-800 text-amber-50 text-[10px] font-bold">
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    isMoonstone ? 'bg-[#519CAB] text-white' : 'bg-amber-800 text-amber-50'
+                  }`}>
                     You
                   </span>
                 )}

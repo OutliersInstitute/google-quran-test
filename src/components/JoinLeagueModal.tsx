@@ -30,17 +30,29 @@ export const JoinLeagueModal: React.FC<JoinLeagueModalProps> = ({
     onClose();
   };
 
+  const isMoonstone = theme === 'moonstone';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-md rounded-3xl bg-[#faf7f0] dark:bg-[#161b20] text-stone-900 dark:text-stone-100 border border-amber-900/20 dark:border-stone-800 shadow-2xl overflow-hidden"
+        className={`w-full max-w-md rounded-3xl shadow-2xl overflow-hidden ${
+          isMoonstone 
+            ? 'bg-white text-[#20373B] border-2 border-[#519CAB]/30' 
+            : 'bg-[#faf7f0] dark:bg-[#161b20] text-stone-900 dark:text-stone-100 border border-amber-900/20 dark:border-stone-800'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-amber-900/10 dark:border-stone-800 bg-[#f4eee0] dark:bg-[#12161a]">
+        <div className={`flex items-center justify-between px-6 py-4 border-b ${
+          isMoonstone 
+            ? 'bg-white border-[#519CAB]/20 text-[#20373B]' 
+            : 'border-amber-900/10 dark:border-stone-800 bg-[#f4eee0] dark:bg-[#12161a]'
+        }`}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-800 text-amber-100 flex items-center justify-center shadow-xs">
-              <KeyRound className="w-5 h-5 text-amber-200" />
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-xs ${
+              isMoonstone ? 'bg-[#519CAB] text-white' : 'bg-amber-800 text-amber-100'
+            }`}>
+              <KeyRound className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-lg font-display font-bold">Join Private League</h2>
@@ -84,7 +96,9 @@ export const JoinLeagueModal: React.FC<JoinLeagueModalProps> = ({
             <button
               type="submit"
               disabled={!code.trim()}
-              className="w-full py-3.5 px-6 rounded-2xl bg-amber-800 hover:bg-amber-700 disabled:opacity-50 active:scale-98 text-amber-50 font-bold text-sm shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+              className={`w-full py-3.5 px-6 rounded-2xl disabled:opacity-50 active:scale-98 font-bold text-sm shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                isMoonstone ? 'bg-[#519CAB] hover:bg-[#438795] text-white' : 'bg-amber-800 hover:bg-amber-700 text-amber-50'
+              }`}
             >
               <span>Join Circle</span>
               <ArrowRight className="w-4 h-4" />

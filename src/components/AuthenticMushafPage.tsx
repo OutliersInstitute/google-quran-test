@@ -103,7 +103,7 @@ export const AuthenticMushafPage: React.FC<AuthenticMushafPageProps> = ({
 
   // Theme filter styling for authentic page image
   const themeContainerBg = {
-    moonstone: 'bg-[#f4fafc] text-[#20373B]',
+    moonstone: 'bg-white text-[#20373B]',
     parchment: 'bg-[#fcf9f2] text-[#2c251e]',
     emerald: 'bg-[#f4f8f5] text-[#0f281e]',
     midnight: 'bg-[#15191c] text-[#f1ece1]',

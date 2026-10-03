@@ -43,7 +43,7 @@
 
   body {
     font-family: var(--font-sans);
-    background-color: #edf6f9;
+    background-color: #ffffff;
     color: #20373B;
   }
 }
@@ -93,10 +93,10 @@
 }
 
 .mushaf-paper-moonstone {
-  background-color: #f7fcfe;
+  background-color: #ffffff;
   background-image: 
-    radial-gradient(#c3e7f1 0.85px, transparent 0.85px),
-    radial-gradient(#dcf2f7 0.85px, #f7fcfe 0.85px);
+    radial-gradient(#519cab15 0.85px, transparent 0.85px),
+    radial-gradient(#519cab08 0.85px, #ffffff 0.85px);
   background-size: 30px 30px;
   background-position: 0 0, 15px 15px;
 }
