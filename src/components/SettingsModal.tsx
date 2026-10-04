@@ -119,6 +119,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   if (!isOpen) return null;
 
   const accuracyPct = totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
+  const [activeTab, setActiveTab] = React.useState<'test' | 'mushaf' | 'audio' | 'tools'>('test');
 
   // Dynamic theme styling - in moonstone theme all light blue is replaced with pure white
   const st = {
@@ -360,12 +361,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
               </div>
 
-              {/* Navigation Action Buttons - Balanced 2x2 grid on mobile, row on desktop */}
-              <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 w-full sm:w-auto flex-shrink-0">
+              {/* Navigation Action Buttons - Flex fluid grid on mobile, row on desktop */}
+              <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto flex-shrink-0">
                 {onNavigateHome && (
                   <button
                     onClick={() => { onClose(); onNavigateHome(); }}
-                    className={`px-2.5 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer flex items-center justify-center gap-1 transition-all ${st.btnSecondary}`}
+                    className={`flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer flex items-center justify-center gap-1 transition-all ${st.btnSecondary}`}
                   >
                     <Home className="w-3.5 h-3.5" />
                     <span>Home</span>
@@ -374,7 +375,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 {onNavigateLeagues && (
                   <button
                     onClick={() => { onClose(); onNavigateLeagues(); }}
-                    className={`px-2.5 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer flex items-center justify-center gap-1 transition-all ${st.btnSecondary}`}
+                    className={`flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer flex items-center justify-center gap-1 transition-all ${st.btnSecondary}`}
                   >
                     <Trophy className="w-3.5 h-3.5 text-[#FFC64F]" />
                     <span>Leagues</span>
@@ -382,21 +383,84 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 )}
                 <button
                   onClick={() => { onClose(); onOpenPagePicker(); }}
-                  className={`px-2.5 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer flex items-center justify-center transition-all ${st.btnAction}`}
+                  className={`flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer flex items-center justify-center transition-all ${st.btnAction}`}
                 >
                   Change Page
                 </button>
                 <button
                   onClick={() => { onClose(); onOpenSurahPicker(); }}
-                  className={`px-2.5 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer flex items-center justify-center transition-all ${st.btnSecondary}`}
+                  className={`flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer flex items-center justify-center transition-all ${st.btnSecondary}`}
                 >
                   Surah List
                 </button>
               </div>
             </div>
 
+            {/* Segmented Tab Navigation Bar (User-Friendly Categorization) */}
+            <div className="flex items-center gap-1 p-1 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs font-bold">
+              <button
+                type="button"
+                id="settings-tab-test-btn"
+                onClick={() => setActiveTab('test')}
+                className={`flex-1 py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  activeTab === 'test'
+                    ? (theme === 'moonstone' ? 'bg-[#519CAB] text-white shadow-xs' : 'bg-amber-800 text-white shadow-xs')
+                    : 'hover:bg-black/5 dark:hover:bg-white/5 opacity-70 hover:opacity-100'
+                }`}
+              >
+                <Target className="w-3.5 h-3.5" />
+                <span className="hidden xs:inline">Test Mode</span>
+                <span className="xs:hidden">Test</span>
+              </button>
+
+              <button
+                type="button"
+                id="settings-tab-mushaf-btn"
+                onClick={() => setActiveTab('mushaf')}
+                className={`flex-1 py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  activeTab === 'mushaf'
+                    ? (theme === 'moonstone' ? 'bg-[#519CAB] text-white shadow-xs' : 'bg-amber-800 text-white shadow-xs')
+                    : 'hover:bg-black/5 dark:hover:bg-white/5 opacity-70 hover:opacity-100'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span className="hidden xs:inline">Mushaf View</span>
+                <span className="xs:hidden">View</span>
+              </button>
+
+              <button
+                type="button"
+                id="settings-tab-audio-btn"
+                onClick={() => setActiveTab('audio')}
+                className={`flex-1 py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  activeTab === 'audio'
+                    ? (theme === 'moonstone' ? 'bg-[#519CAB] text-white shadow-xs' : 'bg-amber-800 text-white shadow-xs')
+                    : 'hover:bg-black/5 dark:hover:bg-white/5 opacity-70 hover:opacity-100'
+                }`}
+              >
+                <Palette className="w-3.5 h-3.5" />
+                <span className="hidden xs:inline">Theme & Audio</span>
+                <span className="xs:hidden">Theme</span>
+              </button>
+
+              <button
+                type="button"
+                id="settings-tab-tools-btn"
+                onClick={() => setActiveTab('tools')}
+                className={`flex-1 py-2 px-1.5 sm:px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  activeTab === 'tools'
+                    ? (theme === 'moonstone' ? 'bg-[#519CAB] text-white shadow-xs' : 'bg-amber-800 text-white shadow-xs')
+                    : 'hover:bg-black/5 dark:hover:bg-white/5 opacity-70 hover:opacity-100'
+                }`}
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span className="hidden xs:inline">Quick Tools</span>
+                <span className="xs:hidden">Tools</span>
+              </button>
+            </div>
+
             {/* Daily Memorization Target & Goal Card */}
-            {dailyTarget && (
+            {activeTab === 'test' && dailyTarget && (
               <div className={`p-3.5 rounded-2xl border flex flex-col gap-2 ${st.goalCard}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -441,667 +505,720 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             )}
 
             {/* SECTION 1: Page Typography & Display Mode */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
-                  <BookOpen className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
-                  Mushaf Page Typography
-                </label>
-                <span className="text-[11px] text-stone-500 dark:text-stone-400 font-medium">
-                  {pageRenderMode === 'authentic-image' ? 'Authentic King Fahd Complex' : 'Standard Web Font'}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  id="settings-page-mode-authentic-btn"
-                  onClick={() => onChangePageRenderMode('authentic-image')}
-                  className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col gap-1 ${
-                    pageRenderMode === 'authentic-image' ? st.cardSelected : st.cardDefault
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs sm:text-sm">Authentic Printed Mushaf</span>
-                    {pageRenderMode === 'authentic-image' && <Check className="w-4 h-4" />}
-                  </div>
-                  <p className={`text-[11px] leading-tight ${pageRenderMode === 'authentic-image' ? st.cardSubSelected : st.cardSubDefault}`}>
-                    Exact 1:1 King Fahd Medina Mushaf pages. Zero word gaps, perfect calligraphic ligatures, matches printed Quran.
-                  </p>
-                </button>
-
-                <button
-                  id="settings-page-mode-digital-btn"
-                  onClick={() => onChangePageRenderMode('digital-text')}
-                  className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col gap-1 ${
-                    pageRenderMode === 'digital-text' ? st.cardSelected : st.cardDefault
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs sm:text-sm">Digital Text Mode</span>
-                    {pageRenderMode === 'digital-text' && <Check className="w-4 h-4" />}
-                  </div>
-                  <p className={`text-[11px] leading-tight ${pageRenderMode === 'digital-text' ? st.cardSubSelected : st.cardSubDefault}`}>
-                    Vector text with selectable words and customizable font sizes.
-                  </p>
-                </button>
-              </div>
-            </div>
-
-            {/* SECTION 2: Testing Mode */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
-                  <Sparkles className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
-                  Challenge Mode
-                </label>
-                <span className="text-[11px] text-stone-500 dark:text-stone-400">
-                  {isMobile ? 'Mobile: Portions (Carousel Fit)' : challengeType === 'full-ayah' ? 'Full Ayah testing' : 'Portion (Start / Middle / End)'}
-                </span>
-              </div>
-
-              {isMobile && (
-                <div className={`p-2 rounded-xl border text-[11px] flex items-center gap-1.5 ${st.itemCard}`}>
-                  <Sparkles className={`w-3.5 h-3.5 flex-shrink-0 ${st.sectionIcon}`} />
-                  <span>
-                    <strong>Mobile Optimized:</strong> Verses are masked in concise 2-3 word portions to fit the bottom carousel cards as sketched.
+            {activeTab === 'mushaf' && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
+                    <BookOpen className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
+                    Mushaf Page Typography
+                  </label>
+                  <span className="text-[11px] text-stone-500 dark:text-stone-400 font-medium">
+                    {pageRenderMode === 'authentic-image' ? 'Authentic King Fahd Complex' : 'Standard Web Font'}
                   </span>
                 </div>
-              )}
 
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  id="settings-mode-full-btn"
-                  onClick={() => onChangeChallengeType('full-ayah')}
-                  className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col gap-1 ${
-                    challengeType === 'full-ayah' && !isMobile ? st.cardSelected : st.cardDefault
-                  } ${isMobile ? 'opacity-70' : ''}`}
-                >
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    id="settings-page-mode-authentic-btn"
+                    onClick={() => onChangePageRenderMode('authentic-image')}
+                    className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                      pageRenderMode === 'authentic-image' ? st.cardSelected : st.cardDefault
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs sm:text-sm">Authentic Printed Mushaf</span>
+                      {pageRenderMode === 'authentic-image' && <Check className="w-4 h-4" />}
+                    </div>
+                    <p className={`text-[11px] leading-tight ${pageRenderMode === 'authentic-image' ? st.cardSubSelected : st.cardSubDefault}`}>
+                      Exact 1:1 King Fahd Medina Mushaf pages. Zero word gaps, perfect calligraphic ligatures, matches printed Quran.
+                    </p>
+                  </button>
+
+                  <button
+                    id="settings-page-mode-digital-btn"
+                    onClick={() => onChangePageRenderMode('digital-text')}
+                    className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                      pageRenderMode === 'digital-text' ? st.cardSelected : st.cardDefault
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs sm:text-sm">Digital Text Mode</span>
+                      {pageRenderMode === 'digital-text' && <Check className="w-4 h-4" />}
+                    </div>
+                    <p className={`text-[11px] leading-tight ${pageRenderMode === 'digital-text' ? st.cardSubSelected : st.cardSubDefault}`}>
+                      Vector text with selectable words and customizable font sizes.
+                    </p>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* SECTION 2 & 3: Testing Mode & Difficulty */}
+            {activeTab === 'test' && (
+              <>
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs sm:text-sm">Complete Ayah</span>
-                    {challengeType === 'full-ayah' && !isMobile && <Check className="w-4 h-4" />}
-                  </div>
-                  <p className={`text-[11px] leading-tight ${challengeType === 'full-ayah' && !isMobile ? st.cardSubSelected : st.cardSubDefault}`}>
-                    Masks the entire verse. Ideal for tablet and desktop landscape memorization.
-                  </p>
-                </button>
-
-                <button
-                  id="settings-mode-portion-btn"
-                  onClick={() => onChangeChallengeType('portion-ayah')}
-                  className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col gap-1 ${
-                    challengeType === 'portion-ayah' || isMobile ? st.cardSelected : st.cardDefault
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs sm:text-sm">Portion Blanking</span>
-                    {(challengeType === 'portion-ayah' || isMobile) && <Check className="w-4 h-4" />}
-                  </div>
-                  <p className={`text-[11px] leading-tight ${challengeType === 'portion-ayah' || isMobile ? st.cardSubSelected : st.cardSubDefault}`}>
-                    Blanks dynamic beginning, middle, or ending clauses. Perfect for mobile bottom carousel.
-                  </p>
-                </button>
-              </div>
-            </div>
-
-            {/* SECTION 3: Difficulty Level */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
-                  <ShieldAlert className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
-                  Difficulty Level
-                </label>
-                <span className="text-[11px] text-stone-500 dark:text-stone-400 font-medium">
-                  {difficulty === 'easy' ? 'Easy (Distinct)' : difficulty === 'medium' ? 'Medium (Same Surah)' : 'Hafiz (Mutashabihat)'}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {/* Easy */}
-                <button
-                  id="settings-diff-easy-btn"
-                  onClick={() => onChangeDifficulty('easy')}
-                  className={`p-2.5 sm:p-3 rounded-2xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                    difficulty === 'easy'
-                      ? 'bg-emerald-700 text-white border-emerald-700 shadow-md ring-2 ring-emerald-500/30'
-                      : st.cardDefault
-                  }`}
-                >
-                  <span className="font-bold text-xs sm:text-sm">Easy</span>
-                  <span className={`text-[10px] ${difficulty === 'easy' ? 'text-emerald-100' : 'opacity-70'}`}>
-                    Distinct Verses
-                  </span>
-                </button>
-
-                {/* Medium */}
-                <button
-                  id="settings-diff-medium-btn"
-                  onClick={() => onChangeDifficulty('medium')}
-                  className={`p-2.5 sm:p-3 rounded-2xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                    difficulty === 'medium' ? st.cardSelected : st.cardDefault
-                  }`}
-                >
-                  <span className="font-bold text-xs sm:text-sm">Medium</span>
-                  <span className={`text-[10px] ${difficulty === 'medium' ? st.cardSubSelected : 'opacity-70'}`}>
-                    Same-Surah Verses
-                  </span>
-                </button>
-
-                {/* Hafiz Mutashabihat */}
-                <button
-                  id="settings-diff-hafiz-btn"
-                  onClick={() => onChangeDifficulty('hafiz')}
-                  className={`p-2.5 sm:p-3 rounded-2xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                    difficulty === 'hafiz'
-                      ? 'bg-rose-700 text-white border-rose-700 shadow-md ring-2 ring-rose-500/30'
-                      : st.cardDefault
-                  }`}
-                >
-                  <span className="font-bold text-xs sm:text-sm flex items-center gap-1">
-                    <span>Hafiz</span> 👑
-                  </span>
-                  <span className={`text-[10px] font-medium ${difficulty === 'hafiz' ? 'text-rose-100' : 'text-rose-600 dark:text-rose-400'}`}>
-                    Mutashabihat
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* SECTION 4: Page Display Layout (Desktop & Tablet) */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
-                  <BookOpen className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
-                  Page Display Layout (Desktop & Tablet)
-                </label>
-                <span className="text-[11px] text-stone-500 dark:text-stone-400">
-                  {pageViewMode === 'single' ? '1 Page Focused' : '2 Pages Spread'}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {/* 1 Page Option */}
-                <button
-                  id="settings-layout-single-btn"
-                  onClick={() => onChangePageViewMode('single')}
-                  className={`p-3 rounded-2xl border-2 text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                    pageViewMode === 'single' ? st.cardSelected : st.cardDefault
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs sm:text-sm flex items-center gap-1.5">
-                      <FileText className="w-4 h-4" />
-                      <span>1 Page (Single Focused)</span>
+                    <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
+                      <Sparkles className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
+                      Challenge Mode
+                    </label>
+                    <span className="text-[11px] text-stone-500 dark:text-stone-400">
+                      {isMobile ? 'Mobile: Portions (Carousel Fit)' : challengeType === 'full-ayah' ? 'Full Ayah testing' : 'Portion (Start / Middle / End)'}
                     </span>
-                    {pageViewMode === 'single' && <Check className="w-4 h-4" />}
                   </div>
-                  <p className={`text-[11px] leading-snug ${pageViewMode === 'single' ? st.cardSubSelected : st.cardSubDefault}`}>
-                    Single centered 15-line page with maximum font size.
-                  </p>
-                </button>
 
-                {/* 2 Pages Option */}
-                <button
-                  id="settings-layout-double-btn"
-                  onClick={() => onChangePageViewMode('double')}
-                  className={`p-3 rounded-2xl border-2 text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                    pageViewMode === 'double' ? st.cardSelected : st.cardDefault
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs sm:text-sm flex items-center gap-1.5">
-                      <BookOpen className="w-4 h-4" />
-                      <span>2 Pages (Open Spread)</span>
-                    </span>
-                    {pageViewMode === 'double' && <Check className="w-4 h-4" />}
-                  </div>
-                  <p className={`text-[11px] leading-snug ${pageViewMode === 'double' ? st.cardSubSelected : st.cardSubDefault}`}>
-                    Two facing Medina pages side-by-side on wide screens.
-                  </p>
-                </button>
-              </div>
-            </div>
+                  {isMobile && (
+                    <div className={`p-2 rounded-xl border text-[11px] flex items-center gap-1.5 ${st.itemCard}`}>
+                      <Sparkles className={`w-3.5 h-3.5 flex-shrink-0 ${st.sectionIcon}`} />
+                      <span>
+                        <strong>Mobile Optimized:</strong> Verses are masked in concise 2-3 word portions to fit the bottom carousel cards as sketched.
+                      </span>
+                    </div>
+                  )}
 
-            {/* SECTION 5: Blanks Per Page */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
-                  <Layers className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
-                  Blanks Per Page
-                </label>
-                <span className="text-[11px] text-stone-500 dark:text-stone-400">
-                  {blankCountChoice === 'all' ? 'All ayahs masked' : `${blankCountChoice} verse(s) per page`}
-                </span>
-              </div>
-              <div className="grid grid-cols-6 gap-1.5">
-                {[1, 2, 3, 4, 5, 'all'].map((opt) => {
-                  const isSelected = blankCountChoice === opt;
-                  return (
+                  <div className="grid grid-cols-2 gap-2">
                     <button
-                      key={String(opt)}
-                      id={`settings-blanks-${opt}-btn`}
-                      onClick={() => onChangeBlankCountChoice(opt as number | 'all')}
-                      className={`py-2 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
-                        isSelected ? st.cardSelected : st.cardDefault
+                      id="settings-mode-full-btn"
+                      onClick={() => onChangeChallengeType('full-ayah')}
+                      className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                        challengeType === 'full-ayah' && !isMobile ? st.cardSelected : st.cardDefault
+                      } ${isMobile ? 'opacity-70' : ''}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs sm:text-sm">Complete Ayah</span>
+                        {challengeType === 'full-ayah' && !isMobile && <Check className="w-4 h-4" />}
+                      </div>
+                      <p className={`text-[11px] leading-tight ${challengeType === 'full-ayah' && !isMobile ? st.cardSubSelected : st.cardSubDefault}`}>
+                        Masks the entire verse. Ideal for tablet and desktop landscape memorization.
+                      </p>
+                    </button>
+
+                    <button
+                      id="settings-mode-portion-btn"
+                      onClick={() => onChangeChallengeType('portion-ayah')}
+                      className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                        challengeType === 'portion-ayah' || isMobile ? st.cardSelected : st.cardDefault
                       }`}
                     >
-                      {opt === 'all' ? 'ALL' : opt}
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs sm:text-sm">Portion Blanking</span>
+                        {(challengeType === 'portion-ayah' || isMobile) && <Check className="w-4 h-4" />}
+                      </div>
+                      <p className={`text-[11px] leading-tight ${challengeType === 'portion-ayah' || isMobile ? st.cardSubSelected : st.cardSubDefault}`}>
+                        Blanks dynamic beginning, middle, or ending clauses. Perfect for mobile bottom carousel.
+                      </p>
                     </button>
-                  );
-                })}
-              </div>
+                  </div>
+                </div>
 
-              {/* Multi-Blank for Long Ayahs toggle */}
-              {onToggleMultiBlanksPerAyah && (
-                <div className={`p-3 rounded-2xl border flex items-center justify-between mt-2 ${st.itemCard}`}>
-                  <div className="flex items-center gap-2.5">
-                    <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
-                      <Sparkles className="w-4 h-4" />
+                {/* SECTION 3: Difficulty Level */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
+                      <ShieldAlert className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
+                      Difficulty Level
+                    </label>
+                    <span className="text-[11px] text-stone-500 dark:text-stone-400 font-medium">
+                      {difficulty === 'easy' ? 'Easy (Distinct)' : difficulty === 'medium' ? 'Medium (Same Surah)' : 'Hafiz (Mutashabihat)'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Easy */}
+                    <button
+                      id="settings-diff-easy-btn"
+                      onClick={() => onChangeDifficulty('easy')}
+                      className={`p-2.5 sm:p-3 rounded-2xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                        difficulty === 'easy'
+                          ? 'bg-emerald-700 text-white border-emerald-700 shadow-md ring-2 ring-emerald-500/30'
+                          : st.cardDefault
+                      }`}
+                    >
+                      <span className="font-bold text-xs sm:text-sm">Easy</span>
+                      <span className={`text-[10px] ${difficulty === 'easy' ? 'text-emerald-100' : 'opacity-70'}`}>
+                        Distinct Verses
+                      </span>
+                    </button>
+
+                    {/* Medium */}
+                    <button
+                      id="settings-diff-medium-btn"
+                      onClick={() => onChangeDifficulty('medium')}
+                      className={`p-2.5 sm:p-3 rounded-2xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                        difficulty === 'medium' ? st.cardSelected : st.cardDefault
+                      }`}
+                    >
+                      <span className="font-bold text-xs sm:text-sm">Medium</span>
+                      <span className={`text-[10px] ${difficulty === 'medium' ? st.cardSubSelected : 'opacity-70'}`}>
+                        Same-Surah Verses
+                      </span>
+                    </button>
+
+                    {/* Hafiz Mutashabihat */}
+                    <button
+                      id="settings-diff-hafiz-btn"
+                      onClick={() => onChangeDifficulty('hafiz')}
+                      className={`p-2.5 sm:p-3 rounded-2xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                        difficulty === 'hafiz'
+                          ? 'bg-rose-700 text-white border-rose-700 shadow-md ring-2 ring-rose-500/30'
+                          : st.cardDefault
+                      }`}
+                    >
+                      <span className="font-bold text-xs sm:text-sm flex items-center gap-1">
+                        <span>Hafiz</span> 👑
+                      </span>
+                      <span className={`text-[10px] font-medium ${difficulty === 'hafiz' ? 'text-rose-100' : 'text-rose-600 dark:text-rose-400'}`}>
+                        Mutashabihat
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* SECTION 4: Page Display Layout (Desktop & Tablet) */}
+            {activeTab === 'mushaf' && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
+                    <BookOpen className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
+                    Page Display Layout (Desktop & Tablet)
+                  </label>
+                  <span className="text-[11px] text-stone-500 dark:text-stone-400">
+                    {pageViewMode === 'single' ? '1 Page Focused' : '2 Pages Spread'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* 1 Page Option */}
+                  <button
+                    id="settings-layout-single-btn"
+                    onClick={() => onChangePageViewMode('single')}
+                    className={`p-3 rounded-2xl border-2 text-left flex flex-col gap-1 transition-all cursor-pointer ${
+                      pageViewMode === 'single' ? st.cardSelected : st.cardDefault
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                        <FileText className="w-4 h-4" />
+                        <span>1 Page (Single Focused)</span>
+                      </span>
+                      {pageViewMode === 'single' && <Check className="w-4 h-4" />}
                     </div>
-                    <div>
-                      <div className="font-bold text-xs flex items-center gap-1.5">
-                        <span>Multiple Blanks in Long Ayahs</span>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${st.badgeActive}`}>Active</span>
+                    <p className={`text-[11px] leading-snug ${pageViewMode === 'single' ? st.cardSubSelected : st.cardSubDefault}`}>
+                      Single centered 15-line page with maximum font size.
+                    </p>
+                  </button>
+
+                  {/* 2 Pages Option */}
+                  <button
+                    id="settings-layout-double-btn"
+                    onClick={() => onChangePageViewMode('double')}
+                    className={`p-3 rounded-2xl border-2 text-left flex flex-col gap-1 transition-all cursor-pointer ${
+                      pageViewMode === 'double' ? st.cardSelected : st.cardDefault
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                        <BookOpen className="w-4 h-4" />
+                        <span>2 Pages (Open Spread)</span>
+                      </span>
+                      {pageViewMode === 'double' && <Check className="w-4 h-4" />}
+                    </div>
+                    <p className={`text-[11px] leading-snug ${pageViewMode === 'double' ? st.cardSubSelected : st.cardSubDefault}`}>
+                      Two facing Medina pages side-by-side on wide screens.
+                    </p>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* SECTION 5: Blanks Per Page */}
+            {activeTab === 'test' && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
+                    <Layers className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
+                    Blanks Per Page
+                  </label>
+                  <span className="text-[11px] text-stone-500 dark:text-stone-400">
+                    {blankCountChoice === 'all' ? 'All ayahs masked' : `${blankCountChoice} verse(s) per page`}
+                  </span>
+                </div>
+                <div className="grid grid-cols-6 gap-1.5">
+                  {[1, 2, 3, 4, 5, 'all'].map((opt) => {
+                    const isSelected = blankCountChoice === opt;
+                    return (
+                      <button
+                        key={String(opt)}
+                        id={`settings-blanks-${opt}-btn`}
+                        onClick={() => onChangeBlankCountChoice(opt as number | 'all')}
+                        className={`py-2 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
+                          isSelected ? st.cardSelected : st.cardDefault
+                        }`}
+                      >
+                        {opt === 'all' ? 'ALL' : opt}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Multi-Blank for Long Ayahs toggle */}
+                {onToggleMultiBlanksPerAyah && (
+                  <div className={`p-3 rounded-2xl border flex items-center justify-between mt-2 ${st.itemCard}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
+                        <Sparkles className="w-4 h-4" />
                       </div>
-                      <div className="text-[10px] opacity-70">
-                        Split long ayahs into multiple fill-in checkpoints (beginning, middle, and conclusion clauses)
+                      <div>
+                        <div className="font-bold text-xs flex items-center gap-1.5">
+                          <span>Multiple Blanks in Long Ayahs</span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${st.badgeActive}`}>Active</span>
+                        </div>
+                        <div className="text-[10px] opacity-70">
+                          Split long ayahs into multiple fill-in checkpoints (beginning, middle, and conclusion clauses)
+                        </div>
                       </div>
                     </div>
+                    <button
+                      id="settings-toggle-multiblanks-btn"
+                      onClick={onToggleMultiBlanksPerAyah}
+                      className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer flex-shrink-0 ${
+                        allowMultiBlanksPerAyah ? st.toggleActive : st.toggleInactive
+                      }`}
+                      title="Toggle multiple blanks per long ayah"
+                    >
+                      <span 
+                        className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                          allowMultiBlanksPerAyah ? 'transform translate-x-5' : ''
+                        }`} 
+                      />
+                    </button>
                   </div>
-                  <button
-                    id="settings-toggle-multiblanks-btn"
-                    onClick={onToggleMultiBlanksPerAyah}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer flex-shrink-0 ${
-                      allowMultiBlanksPerAyah ? st.toggleActive : st.toggleInactive
-                    }`}
-                    title="Toggle multiple blanks per long ayah"
-                  >
-                    <span 
-                      className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
-                        allowMultiBlanksPerAyah ? 'transform translate-x-5' : ''
-                      }`} 
-                    />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* SECTION 6: Audio & Automation Toggles */}
-            <div className="space-y-2">
-              <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
-                <Sliders className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
-                Audio & Automation Preferences
-              </label>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {/* Auto Play Audio */}
-                <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
-                  <div className="flex items-center gap-2.5">
-                    <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
-                      {autoPlayAudio ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 opacity-50" />}
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs">Ayah Recitation</div>
-                      <div className="text-[10px] opacity-70">Play audio on correct answer</div>
-                    </div>
-                  </div>
-                  <button
-                    id="settings-toggle-audio-btn"
-                    onClick={onToggleAutoPlayAudio}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                      autoPlayAudio ? st.toggleActive : st.toggleInactive
-                    }`}
-                  >
-                    <span 
-                      className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
-                        autoPlayAudio ? 'transform translate-x-5' : ''
-                      }`} 
-                    />
-                  </button>
-                </div>
-
-                {/* Auto Advance Ayah on Correct */}
-                <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
-                  <div className="flex items-center gap-2.5">
-                    <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs">Auto-Next Ayah on Correct</div>
-                      <div className="text-[10px] opacity-70">Proceed to next verse upon right answer</div>
-                    </div>
-                  </div>
-                  <button
-                    id="settings-toggle-autoadvance-correct-btn"
-                    onClick={onToggleAutoAdvanceOnCorrect}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                      autoAdvanceOnCorrect ? st.toggleActive : st.toggleInactive
-                    }`}
-                  >
-                    <span 
-                      className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
-                        autoAdvanceOnCorrect ? 'transform translate-x-5' : ''
-                      }`} 
-                    />
-                  </button>
-                </div>
-
-                {/* Auto Advance Page */}
-                <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
-                  <div className="flex items-center gap-2.5">
-                    <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
-                      <Zap className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs">Auto-Advance Page</div>
-                      <div className="text-[10px] opacity-70">Proceed when page completed</div>
-                    </div>
-                  </div>
-                  <button
-                    id="settings-toggle-autoadvance-btn"
-                    onClick={onToggleAutoAdvance}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                      autoAdvance ? st.toggleActive : st.toggleInactive
-                    }`}
-                  >
-                    <span 
-                      className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
-                        autoAdvance ? 'transform translate-x-5' : ''
-                      }`} 
-                    />
-                  </button>
-                </div>
-
-                {/* English Meanings */}
-                <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
-                  <div className="flex items-center gap-2.5">
-                    <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
-                      {showTranslation ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 opacity-50" />}
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs">English Meanings</div>
-                      <div className="text-[10px] opacity-70">Display Sahih Int. translation</div>
-                    </div>
-                  </div>
-                  <button
-                    id="settings-toggle-translation-btn"
-                    onClick={onToggleTranslation}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                      showTranslation ? st.toggleActive : st.toggleInactive
-                    }`}
-                  >
-                    <span 
-                      className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
-                        showTranslation ? 'transform translate-x-5' : ''
-                      }`} 
-                    />
-                  </button>
-                </div>
-
-                {/* Haptic Feedback (Vibration) */}
-                <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
-                  <div className="flex items-center gap-2.5">
-                    <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
-                      <Smartphone className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs">Haptic Feedback</div>
-                      <div className="text-[10px] opacity-70">Vibrate on taps, page turns & answers</div>
-                    </div>
-                  </div>
-                  <button
-                    id="settings-toggle-haptics-btn"
-                    onClick={onToggleHaptics}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                      hapticsEnabled ? st.toggleActive : st.toggleInactive
-                    }`}
-                    title="Toggle Haptic Feedback"
-                  >
-                    <span 
-                      className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
-                        hapticsEnabled ? 'transform translate-x-5' : ''
-                      }`} 
-                    />
-                  </button>
-                </div>
-
-                {/* Review Mistakes Quick Access */}
-                <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
-                  <div className="flex items-center gap-2.5">
-                    <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
-                      <Bookmark className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs">Mistake Bookmarks</div>
-                      <div className="text-[10px] opacity-70">{mistakesCount} verse(s) to review</div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => { onClose(); onOpenReview(); }}
-                    className={`px-2.5 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer transition-all ${st.btnSecondary}`}
-                  >
-                    Open
-                  </button>
-                </div>
-
-                {/* How to Play Guide Quick Access */}
-                <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
-                  <div className="flex items-center gap-2.5">
-                    <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
-                      <HelpCircle className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs">How to Play & Guide</div>
-                      <div className="text-[10px] opacity-70">Rules & memorization tips</div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => { onClose(); onOpenHowToPlay(); }}
-                    className={`px-2.5 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer transition-all ${st.btnSecondary}`}
-                  >
-                    View
-                  </button>
-                </div>
+                )}
               </div>
-            </div>
+            )}
 
-            {/* SECTION 7: Theme Appearance */}
-            <div className="space-y-2">
-              <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
-                <Palette className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
-                Mushaf Aesthetic & Color Scheme
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                {/* Moonstone & Saffron Palette */}
-                <button
-                  id="settings-theme-moonstone-btn"
-                  onClick={() => onChangeTheme('moonstone')}
-                  className={`p-2.5 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
-                    theme === 'moonstone' ? 'border-[#519CAB] ring-2 ring-[#519CAB]/30 bg-white text-[#20373B] shadow-sm' : 'border-[#519CAB]/20 bg-white text-[#20373B] hover:border-[#519CAB]/40'
-                  }`}
-                >
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#20373B] via-[#519CAB] to-[#FFC64F] border border-[#519CAB] shadow-xs" />
-                  <span className="text-[11px] font-bold">Moonstone</span>
-                </button>
+            {/* SECTION 6 & 7: Audio, Automation & Theme Appearance */}
+            {activeTab === 'audio' && (
+              <>
+                {/* SECTION 7: Theme Appearance First in Theme Tab */}
+                <div className="space-y-2">
+                  <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
+                    <Palette className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
+                    Mushaf Aesthetic & Color Scheme
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {/* Moonstone & Saffron Palette */}
+                    <button
+                      id="settings-theme-moonstone-btn"
+                      onClick={() => onChangeTheme('moonstone')}
+                      className={`p-2.5 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
+                        theme === 'moonstone' ? 'border-[#519CAB] ring-2 ring-[#519CAB]/30 bg-white text-[#20373B] shadow-sm' : 'border-[#519CAB]/20 bg-white text-[#20373B] hover:border-[#519CAB]/40'
+                      }`}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#20373B] via-[#519CAB] to-[#FFC64F] border border-[#519CAB] shadow-xs" />
+                      <span className="text-[11px] font-bold">Moonstone</span>
+                    </button>
 
-                {/* Parchment */}
-                <button
-                  id="settings-theme-parchment-btn"
-                  onClick={() => onChangeTheme('parchment')}
-                  className={`p-2.5 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
-                    theme === 'parchment' ? 'border-amber-700 ring-2 ring-amber-600/30 bg-[#fcf9f2] text-stone-900 shadow-sm' : 'border-amber-900/15 bg-[#fcf9f2] text-stone-800 hover:border-amber-700/40'
-                  }`}
-                >
-                  <div className="w-6 h-6 rounded-full bg-[#fdfbf7] border border-amber-600/60 shadow-xs" />
-                  <span className="text-[11px] font-bold">Parchment</span>
-                </button>
+                    {/* Parchment */}
+                    <button
+                      id="settings-theme-parchment-btn"
+                      onClick={() => onChangeTheme('parchment')}
+                      className={`p-2.5 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
+                        theme === 'parchment' ? 'border-amber-700 ring-2 ring-amber-600/30 bg-[#fcf9f2] text-stone-900 shadow-sm' : 'border-amber-900/15 bg-[#fcf9f2] text-stone-800 hover:border-amber-700/40'
+                      }`}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-[#fdfbf7] border border-amber-600/60 shadow-xs" />
+                      <span className="text-[11px] font-bold">Parchment</span>
+                    </button>
 
-                {/* Emerald */}
-                <button
-                  id="settings-theme-emerald-btn"
-                  onClick={() => onChangeTheme('emerald')}
-                  className={`p-2.5 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
-                    theme === 'emerald' ? 'border-emerald-700 ring-2 ring-emerald-600/30 bg-[#e8f5e9] text-emerald-950 shadow-sm' : 'border-emerald-900/15 bg-[#e8f5e9] text-emerald-900 hover:border-emerald-700/40'
-                  }`}
-                >
-                  <div className="w-6 h-6 rounded-full bg-[#e8f5e9] border border-emerald-600/60 shadow-xs" />
-                  <span className="text-[11px] font-bold">Emerald</span>
-                </button>
+                    {/* Emerald */}
+                    <button
+                      id="settings-theme-emerald-btn"
+                      onClick={() => onChangeTheme('emerald')}
+                      className={`p-2.5 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
+                        theme === 'emerald' ? 'border-emerald-700 ring-2 ring-emerald-600/30 bg-[#e8f5e9] text-emerald-950 shadow-sm' : 'border-emerald-900/15 bg-[#e8f5e9] text-emerald-900 hover:border-emerald-700/40'
+                      }`}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-[#e8f5e9] border border-emerald-600/60 shadow-xs" />
+                      <span className="text-[11px] font-bold">Emerald</span>
+                    </button>
 
-                {/* Midnight */}
-                <button
-                  id="settings-theme-midnight-btn"
-                  onClick={() => onChangeTheme('midnight')}
-                  className={`p-2.5 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
-                    theme === 'midnight' ? 'border-amber-500 ring-2 ring-amber-500/30 bg-[#1a1f24] text-amber-100 shadow-sm' : 'border-stone-700 bg-[#1a1f24] text-stone-300 hover:border-amber-500/40'
-                  }`}
-                >
-                  <div className="w-6 h-6 rounded-full bg-[#1a1f24] border border-amber-500/60 shadow-xs" />
-                  <span className="text-[11px] font-bold">Midnight</span>
-                </button>
+                    {/* Midnight */}
+                    <button
+                      id="settings-theme-midnight-btn"
+                      onClick={() => onChangeTheme('midnight')}
+                      className={`p-2.5 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
+                        theme === 'midnight' ? 'border-amber-500 ring-2 ring-amber-500/30 bg-[#161b20] text-amber-200 shadow-sm' : 'border-stone-700 bg-[#161b20] text-stone-300 hover:border-amber-500/40'
+                      }`}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-[#161b20] border border-amber-500/60 shadow-xs" />
+                      <span className="text-[11px] font-bold">Midnight</span>
+                    </button>
 
-                {/* Classic White */}
-                <button
-                  id="settings-theme-white-btn"
-                  onClick={() => onChangeTheme('classic-white')}
-                  className={`p-2.5 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
-                    theme === 'classic-white' ? 'border-stone-600 ring-2 ring-stone-400/30 bg-white text-stone-900 shadow-sm' : 'border-stone-300 bg-white text-stone-800 hover:border-stone-500/40'
-                  }`}
-                >
-                  <div className="w-6 h-6 rounded-full bg-white border border-stone-400 shadow-xs" />
-                  <span className="text-[11px] font-bold">White</span>
-                </button>
-              </div>
-            </div>
+                    {/* Classic White */}
+                    <button
+                      id="settings-theme-white-btn"
+                      onClick={() => onChangeTheme('classic-white')}
+                      className={`p-2.5 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
+                        theme === 'classic-white' ? 'border-stone-600 ring-2 ring-stone-400/30 bg-white text-stone-900 shadow-sm' : 'border-stone-300 bg-white text-stone-800 hover:border-stone-500/40'
+                      }`}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-white border border-stone-400 shadow-xs" />
+                      <span className="text-[11px] font-bold">White</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Audio & Automation Preferences */}
+                <div className="space-y-2">
+                  <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
+                    <Sliders className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
+                    Audio & Automation Preferences
+                  </label>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {/* Auto Play Audio */}
+                    <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
+                          {autoPlayAudio ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 opacity-50" />}
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs">Ayah Recitation</div>
+                          <div className="text-[10px] opacity-70">Play audio on correct answer</div>
+                        </div>
+                      </div>
+                      <button
+                        id="settings-toggle-audio-btn"
+                        onClick={onToggleAutoPlayAudio}
+                        className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
+                          autoPlayAudio ? st.toggleActive : st.toggleInactive
+                        }`}
+                      >
+                        <span 
+                          className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                            autoPlayAudio ? 'transform translate-x-5' : ''
+                          }`} 
+                        />
+                      </button>
+                    </div>
+
+                    {/* Auto Advance Ayah on Correct */}
+                    <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs">Auto-Next Ayah on Correct</div>
+                          <div className="text-[10px] opacity-70">Proceed to next verse upon right answer</div>
+                        </div>
+                      </div>
+                      <button
+                        id="settings-toggle-autoadvance-correct-btn"
+                        onClick={onToggleAutoAdvanceOnCorrect}
+                        className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
+                          autoAdvanceOnCorrect ? st.toggleActive : st.toggleInactive
+                        }`}
+                      >
+                        <span 
+                          className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                            autoAdvanceOnCorrect ? 'transform translate-x-5' : ''
+                          }`} 
+                        />
+                      </button>
+                    </div>
+
+                    {/* Auto Advance Page */}
+                    <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
+                          <Zap className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs">Auto-Advance Page</div>
+                          <div className="text-[10px] opacity-70">Proceed when page completed</div>
+                        </div>
+                      </div>
+                      <button
+                        id="settings-toggle-autoadvance-btn"
+                        onClick={onToggleAutoAdvance}
+                        className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
+                          autoAdvance ? st.toggleActive : st.toggleInactive
+                        }`}
+                      >
+                        <span 
+                          className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                            autoAdvance ? 'transform translate-x-5' : ''
+                          }`} 
+                        />
+                      </button>
+                    </div>
+
+                    {/* English Meanings */}
+                    <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
+                          {showTranslation ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 opacity-50" />}
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs">English Meanings</div>
+                          <div className="text-[10px] opacity-70">Display Sahih Int. translation</div>
+                        </div>
+                      </div>
+                      <button
+                        id="settings-toggle-translation-btn"
+                        onClick={onToggleTranslation}
+                        className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
+                          showTranslation ? st.toggleActive : st.toggleInactive
+                        }`}
+                      >
+                        <span 
+                          className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                            showTranslation ? 'transform translate-x-5' : ''
+                          }`} 
+                        />
+                      </button>
+                    </div>
+
+                    {/* Haptic Feedback (Vibration) */}
+                    <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
+                          <Smartphone className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs">Haptic Feedback</div>
+                          <div className="text-[10px] opacity-70">Vibrate on taps, page turns & answers</div>
+                        </div>
+                      </div>
+                      <button
+                        id="settings-toggle-haptics-btn"
+                        onClick={onToggleHaptics}
+                        className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
+                          hapticsEnabled ? st.toggleActive : st.toggleInactive
+                        }`}
+                        title="Toggle Haptic Feedback"
+                      >
+                        <span 
+                          className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                            hapticsEnabled ? 'transform translate-x-5' : ''
+                          }`} 
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* SECTION 8: Page Margins & Padding */}
-            <div className={`space-y-2.5 p-3.5 rounded-2xl border ${st.itemCard}`}>
-              <div className="flex items-center justify-between">
-                <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
-                  <Maximize2 className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
-                  Page Margins & Spacing
-                </label>
-                <span className="text-[11px] font-medium opacity-80">
-                  {pageMargins.horizontalPadding}px horiz • {pageMargins.verticalPadding}px vert
-                </span>
-              </div>
-
-              {/* Preset quick buttons */}
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  id="settings-margin-compact-btn"
-                  type="button"
-                  onClick={() => onChangePageMargins({ preset: 'compact', horizontalPadding: 12, verticalPadding: 6 })}
-                  className={`py-2 px-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
-                    pageMargins.preset === 'compact' ? st.cardSelected : st.cardDefault
-                  }`}
-                >
-                  <span className="text-xs font-bold">Compact</span>
-                  <span className={`text-[10px] ${pageMargins.preset === 'compact' ? st.cardSubSelected : 'opacity-70'}`}>12px / 6px</span>
-                </button>
-
-                <button
-                  id="settings-margin-standard-btn"
-                  type="button"
-                  onClick={() => onChangePageMargins({ preset: 'standard', horizontalPadding: 24, verticalPadding: 10 })}
-                  className={`py-2 px-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
-                    pageMargins.preset === 'standard' ? st.cardSelected : st.cardDefault
-                  }`}
-                >
-                  <span className="text-xs font-bold">Standard</span>
-                  <span className={`text-[10px] ${pageMargins.preset === 'standard' ? st.cardSubSelected : 'opacity-70'}`}>24px / 10px</span>
-                </button>
-
-                <button
-                  id="settings-margin-spacious-btn"
-                  type="button"
-                  onClick={() => onChangePageMargins({ preset: 'spacious', horizontalPadding: 36, verticalPadding: 16 })}
-                  className={`py-2 px-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
-                    pageMargins.preset === 'spacious' ? st.cardSelected : st.cardDefault
-                  }`}
-                >
-                  <span className="text-xs font-bold">Spacious</span>
-                  <span className={`text-[10px] ${pageMargins.preset === 'spacious' ? st.cardSubSelected : 'opacity-70'}`}>36px / 16px</span>
-                </button>
-              </div>
-
-              {/* Sliders for precision fine-tuning */}
-              <div className="space-y-2 pt-2 border-t border-black/10 dark:border-white/10">
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="opacity-80 font-medium">Horizontal Page Margin (Sides)</span>
-                    <span className="font-mono font-bold">{pageMargins.horizontalPadding} px</span>
-                  </div>
-                  <input
-                    id="settings-margin-horizontal-slider"
-                    type="range"
-                    min="4"
-                    max="56"
-                    step="2"
-                    value={pageMargins.horizontalPadding}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10);
-                      onChangePageMargins({
-                        preset: 'custom',
-                        horizontalPadding: val,
-                        verticalPadding: pageMargins.verticalPadding
-                      });
-                    }}
-                    className={`w-full ${st.sliderAccent} h-1.5 bg-stone-200 dark:bg-stone-700 rounded-lg cursor-pointer`}
-                  />
+            {activeTab === 'mushaf' && (
+              <div className={`space-y-2.5 p-3.5 rounded-2xl border ${st.itemCard}`}>
+                <div className="flex items-center justify-between">
+                  <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
+                    <Maximize2 className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
+                    Page Margins & Spacing
+                  </label>
+                  <span className="text-[11px] font-medium opacity-80">
+                    {pageMargins.horizontalPadding}px horiz • {pageMargins.verticalPadding}px vert
+                  </span>
                 </div>
 
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="opacity-80 font-medium">Vertical Page Margin (Top & Bottom)</span>
-                    <span className="font-mono font-bold">{pageMargins.verticalPadding} px</span>
+                {/* Preset quick buttons */}
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    id="settings-margin-compact-btn"
+                    type="button"
+                    onClick={() => onChangePageMargins({ preset: 'compact', horizontalPadding: 12, verticalPadding: 6 })}
+                    className={`py-2 px-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
+                      pageMargins.preset === 'compact' ? st.cardSelected : st.cardDefault
+                    }`}
+                  >
+                    <span className="text-xs font-bold">Compact</span>
+                    <span className={`text-[10px] ${pageMargins.preset === 'compact' ? st.cardSubSelected : 'opacity-70'}`}>12px / 6px</span>
+                  </button>
+
+                  <button
+                    id="settings-margin-standard-btn"
+                    type="button"
+                    onClick={() => onChangePageMargins({ preset: 'standard', horizontalPadding: 24, verticalPadding: 10 })}
+                    className={`py-2 px-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
+                      pageMargins.preset === 'standard' ? st.cardSelected : st.cardDefault
+                    }`}
+                  >
+                    <span className="text-xs font-bold">Standard</span>
+                    <span className={`text-[10px] ${pageMargins.preset === 'standard' ? st.cardSubSelected : 'opacity-70'}`}>24px / 10px</span>
+                  </button>
+
+                  <button
+                    id="settings-margin-spacious-btn"
+                    type="button"
+                    onClick={() => onChangePageMargins({ preset: 'spacious', horizontalPadding: 36, verticalPadding: 16 })}
+                    className={`py-2 px-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
+                      pageMargins.preset === 'spacious' ? st.cardSelected : st.cardDefault
+                    }`}
+                  >
+                    <span className="text-xs font-bold">Spacious</span>
+                    <span className={`text-[10px] ${pageMargins.preset === 'spacious' ? st.cardSubSelected : 'opacity-70'}`}>36px / 16px</span>
+                  </button>
+                </div>
+
+                {/* Sliders for precision fine-tuning */}
+                <div className="space-y-2 pt-2 border-t border-black/10 dark:border-white/10">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="opacity-80 font-medium">Horizontal Page Margin (Sides)</span>
+                      <span className="font-mono font-bold">{pageMargins.horizontalPadding} px</span>
+                    </div>
+                    <input
+                      id="settings-margin-horizontal-slider"
+                      type="range"
+                      min="4"
+                      max="56"
+                      step="2"
+                      value={pageMargins.horizontalPadding}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        onChangePageMargins({
+                          preset: 'custom',
+                          horizontalPadding: val,
+                          verticalPadding: pageMargins.verticalPadding
+                        });
+                      }}
+                      className={`w-full ${st.sliderAccent} h-1.5 bg-stone-200 dark:bg-stone-700 rounded-lg cursor-pointer`}
+                    />
                   </div>
-                  <input
-                    id="settings-margin-vertical-slider"
-                    type="range"
-                    min="2"
-                    max="30"
-                    step="2"
-                    value={pageMargins.verticalPadding}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10);
-                      onChangePageMargins({
-                        preset: 'custom',
-                        horizontalPadding: pageMargins.horizontalPadding,
-                        verticalPadding: val
-                      });
-                    }}
-                    className={`w-full ${st.sliderAccent} h-1.5 bg-stone-200 dark:bg-stone-700 rounded-lg cursor-pointer`}
-                  />
+
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="opacity-80 font-medium">Vertical Page Margin (Top & Bottom)</span>
+                      <span className="font-mono font-bold">{pageMargins.verticalPadding} px</span>
+                    </div>
+                    <input
+                      id="settings-margin-vertical-slider"
+                      type="range"
+                      min="2"
+                      max="30"
+                      step="2"
+                      value={pageMargins.verticalPadding}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        onChangePageMargins({
+                          preset: 'custom',
+                          horizontalPadding: pageMargins.horizontalPadding,
+                          verticalPadding: val
+                        });
+                      }}
+                      className={`w-full ${st.sliderAccent} h-1.5 bg-stone-200 dark:bg-stone-700 rounded-lg cursor-pointer`}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* SECTION 9: Session Actions (Shuffle & Reset) */}
-            <div className="space-y-2 pt-1 border-t border-black/10 dark:border-white/10">
-              <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
-                <RotateCcw className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
-                Page Actions
-              </label>
+            {/* SECTION 9: Session Actions (Shuffle & Reset) & Learning Tools */}
+            {activeTab === 'tools' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
+                    <RotateCcw className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
+                    Page Blanks Management
+                  </label>
 
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  id="settings-shuffle-blanks-btn"
-                  onClick={() => { onShuffleNewBlanks(); onClose(); }}
-                  className={`p-3 rounded-2xl border font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${st.btnSecondary}`}
-                >
-                  <Shuffle className="w-4 h-4" />
-                  <span>Shuffle New Blanks</span>
-                </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      id="settings-shuffle-blanks-btn"
+                      onClick={() => { onShuffleNewBlanks(); onClose(); }}
+                      className={`p-3 rounded-2xl border font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${st.btnSecondary}`}
+                    >
+                      <Shuffle className="w-4 h-4 text-[#519CAB]" />
+                      <span>Shuffle New Blanks</span>
+                    </button>
 
-                <button
-                  id="settings-reset-blanks-btn"
-                  onClick={() => { onResetPageBlanks(); onClose(); }}
-                  className={`p-3 rounded-2xl border font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${st.btnSecondary}`}
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  <span>Retry Page Blanks</span>
-                </button>
+                    <button
+                      id="settings-reset-blanks-btn"
+                      onClick={() => { onResetPageBlanks(); onClose(); }}
+                      className={`p-3 rounded-2xl border font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${st.btnSecondary}`}
+                    >
+                      <RotateCcw className="w-4 h-4 text-[#519CAB]" />
+                      <span>Retry Page Blanks</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Helpful Learning Tools */}
+                <div className="space-y-2">
+                  <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
+                    <Sparkles className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
+                    Help & Review Tools
+                  </label>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {/* Review Mistakes Quick Access */}
+                    <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
+                          <Bookmark className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs">Mistake Bookmarks</div>
+                          <div className="text-[10px] opacity-70">{mistakesCount} verse(s) to review</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => { onClose(); onOpenReview(); }}
+                        className={`px-3 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer transition-all ${st.btnAction}`}
+                      >
+                        Review
+                      </button>
+                    </div>
+
+                    {/* How to Play Guide Quick Access */}
+                    <div className={`p-3 rounded-2xl border flex items-center justify-between ${st.itemCard}`}>
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-xl ${st.itemIconBox}`}>
+                          <HelpCircle className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs">How to Play & Guide</div>
+                          <div className="text-[10px] opacity-70">Rules & memorization tips</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => { onClose(); onOpenHowToPlay(); }}
+                        className={`px-3 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer transition-all ${st.btnSecondary}`}
+                      >
+                        Guide
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Direct Navigation shortcuts */}
+                <div className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 text-xs ${st.itemCard}`}>
+                  <div>
+                    <span className="font-bold block">Quick Navigation</span>
+                    <span className="text-[11px] opacity-70">Jump to any surah or page</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { onClose(); onOpenSurahPicker(); }}
+                      className={`px-2.5 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer ${st.btnSecondary}`}
+                    >
+                      Surah Index
+                    </button>
+                    <button
+                      onClick={() => { onClose(); onOpenPagePicker(); }}
+                      className={`px-2.5 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer ${st.btnSecondary}`}
+                    >
+                      Page Picker
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
 

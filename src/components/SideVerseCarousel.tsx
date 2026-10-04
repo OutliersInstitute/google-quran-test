@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BlankTarget, CarouselOption, ChallengeType, DifficultyLevel, Surah, PageRangeConfig, PageViewMode } from '../types';
+import { BlankTarget, CarouselOption, ChallengeType, DifficultyLevel, Surah, PageRangeConfig, PageViewMode, MushafTheme } from '../types';
 import { 
   Sparkles, CheckCircle2, XCircle, Volume2, VolumeX, ArrowRight, 
   Shuffle, Eye, EyeOff, BookOpen, Flame, Award, ChevronLeft, ChevronRight, RotateCcw,
@@ -49,6 +49,7 @@ interface SideVerseCarouselProps {
   onOpenSettings?: () => void;
   onNavigateHome?: () => void;
   onNavigateLeagues?: () => void;
+  theme?: MushafTheme;
 }
 
 export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
@@ -90,6 +91,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
   onOpenSettings,
   onNavigateHome,
   onNavigateLeagues,
+  theme = 'moonstone',
 }) => {
   const [showTranslations, setShowTranslations] = useState<boolean>(false);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -216,24 +218,127 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeTarget, activeBlankIndex, totalBlanks, blankTargets, isPageAllCompleted, onSelectOption, onSelectBlankIndex, onNextPage, onNextQuestion]);
 
+  const st = {
+    moonstone: {
+      aside: 'bg-white text-[#20373B] border-2 border-[#519CAB]/25 shadow-xl',
+      headerBorder: 'border-b border-[#519CAB]/15',
+      navBox: 'bg-white border border-[#519CAB]/25 text-[#20373B] shadow-2xs',
+      navBtn: 'hover:bg-[#519CAB] hover:text-white text-[#20373B]',
+      accentBtn: 'bg-[#519CAB] hover:bg-[#438795] text-white',
+      accentIcon: 'text-[#FFC64F]',
+      secondaryBtn: 'bg-white hover:bg-stone-50 text-[#20373B] border border-[#519CAB]/20 shadow-xs',
+      secondaryIcon: 'text-[#519CAB]',
+      badgeActive: 'bg-[#519CAB] text-white border-[#519CAB]',
+      badgeDefault: 'bg-stone-100 text-[#20373B] border-stone-200',
+      portionBanner: 'bg-stone-50 border border-[#519CAB]/20',
+      portionTitle: 'text-[#519CAB]',
+      cardDefault: 'bg-white hover:bg-stone-50 border-[#519CAB]/30 text-[#20373B]',
+      badgeLetter: 'bg-stone-100 text-[#20373B] border-[#519CAB]/30',
+      hotkey: 'bg-stone-100 text-[#20373B]',
+      footerBox: 'bg-white border-t border-[#519CAB]/15',
+      shuffleBtn: 'bg-stone-100 hover:bg-stone-200 text-[#20373B] border border-[#519CAB]/20',
+      nextPageBtn: 'bg-[#519CAB] hover:bg-[#438795] text-white',
+    },
+    parchment: {
+      aside: 'bg-[#fcf9f2] dark:bg-[#181c20] text-stone-900 dark:text-stone-100 border-2 border-amber-900/25 shadow-xl',
+      headerBorder: 'border-b border-amber-900/15',
+      navBox: 'bg-white dark:bg-stone-800 border border-amber-900/25 text-stone-900 dark:text-stone-100 shadow-2xs',
+      navBtn: 'hover:bg-amber-800 hover:text-white text-stone-800 dark:text-stone-200',
+      accentBtn: 'bg-amber-800 hover:bg-amber-700 text-white',
+      accentIcon: 'text-amber-300',
+      secondaryBtn: 'bg-white dark:bg-stone-800 hover:bg-amber-50 text-stone-900 dark:text-stone-100 border border-amber-900/20 shadow-xs',
+      secondaryIcon: 'text-amber-800 dark:text-amber-400',
+      badgeActive: 'bg-amber-800 text-white border-amber-900',
+      badgeDefault: 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-300',
+      portionBanner: 'bg-amber-100/70 dark:bg-stone-800/90 border border-amber-900/20',
+      portionTitle: 'text-amber-900 dark:text-amber-300',
+      cardDefault: 'bg-white dark:bg-stone-800 hover:bg-amber-50/50 border-amber-900/25 text-stone-900 dark:text-stone-100',
+      badgeLetter: 'bg-amber-900/10 text-amber-950 dark:text-amber-200 border-amber-900/20',
+      hotkey: 'bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-300',
+      footerBox: 'bg-amber-950/5 dark:bg-stone-900/80 border-t border-amber-900/15',
+      shuffleBtn: 'bg-amber-100 dark:bg-stone-800 hover:bg-amber-200 text-amber-950 dark:text-amber-200 border border-amber-900/15',
+      nextPageBtn: 'bg-gradient-to-r from-emerald-700 via-emerald-800 to-amber-900 hover:from-emerald-600 text-white',
+    },
+    emerald: {
+      aside: 'bg-[#f3f7f4] text-[#0f281e] border-2 border-emerald-900/25 shadow-xl',
+      headerBorder: 'border-b border-emerald-900/15',
+      navBox: 'bg-white border border-emerald-900/25 text-[#0f281e] shadow-2xs',
+      navBtn: 'hover:bg-emerald-800 hover:text-white text-[#0f281e]',
+      accentBtn: 'bg-emerald-800 hover:bg-emerald-700 text-white',
+      accentIcon: 'text-emerald-200',
+      secondaryBtn: 'bg-white hover:bg-emerald-50 text-[#0f281e] border border-emerald-900/20 shadow-xs',
+      secondaryIcon: 'text-emerald-800',
+      badgeActive: 'bg-emerald-800 text-white border-emerald-900',
+      badgeDefault: 'bg-stone-100 text-stone-700 border-stone-300',
+      portionBanner: 'bg-emerald-100/70 border border-emerald-900/20',
+      portionTitle: 'text-emerald-900',
+      cardDefault: 'bg-white hover:bg-emerald-50/50 border-emerald-900/25 text-[#0f281e]',
+      badgeLetter: 'bg-emerald-900/10 text-emerald-950 border-emerald-900/20',
+      hotkey: 'bg-stone-100 text-stone-700',
+      footerBox: 'bg-emerald-950/5 border-t border-emerald-900/15',
+      shuffleBtn: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-900/15',
+      nextPageBtn: 'bg-emerald-800 hover:bg-emerald-700 text-white',
+    },
+    midnight: {
+      aside: 'bg-[#14181c] text-[#f1ece1] border-2 border-stone-800 shadow-xl',
+      headerBorder: 'border-b border-stone-800',
+      navBox: 'bg-[#1a2128] border border-stone-700 text-stone-100 shadow-2xs',
+      navBtn: 'hover:bg-stone-700 hover:text-amber-400 text-stone-200',
+      accentBtn: 'bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold',
+      accentIcon: 'text-stone-950',
+      secondaryBtn: 'bg-[#1a2128] hover:bg-stone-800 text-stone-100 border border-stone-700 shadow-xs',
+      secondaryIcon: 'text-amber-400',
+      badgeActive: 'bg-amber-500 text-stone-950 border-amber-600 font-bold',
+      badgeDefault: 'bg-stone-800 text-stone-300 border-stone-700',
+      portionBanner: 'bg-stone-800/80 border border-stone-700',
+      portionTitle: 'text-amber-400',
+      cardDefault: 'bg-[#1a2128] hover:bg-stone-800 border-stone-700 text-stone-100',
+      badgeLetter: 'bg-stone-800 text-amber-400 border-stone-700',
+      hotkey: 'bg-stone-800 text-stone-400',
+      footerBox: 'bg-[#181d22] border-t border-stone-800',
+      shuffleBtn: 'bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700',
+      nextPageBtn: 'bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold',
+    },
+    'classic-white': {
+      aside: 'bg-[#fcfcfc] text-stone-900 border-2 border-stone-300 shadow-xl',
+      headerBorder: 'border-b border-stone-200',
+      navBox: 'bg-white border border-stone-300 text-stone-900 shadow-2xs',
+      navBtn: 'hover:bg-stone-900 hover:text-white text-stone-900',
+      accentBtn: 'bg-stone-900 hover:bg-stone-800 text-white',
+      accentIcon: 'text-stone-200',
+      secondaryBtn: 'bg-white hover:bg-stone-100 text-stone-900 border border-stone-200 shadow-xs',
+      secondaryIcon: 'text-stone-900',
+      badgeActive: 'bg-stone-900 text-white border-stone-950 font-bold',
+      badgeDefault: 'bg-stone-100 text-stone-700 border-stone-300',
+      portionBanner: 'bg-stone-100 border border-stone-200',
+      portionTitle: 'text-stone-900',
+      cardDefault: 'bg-white hover:bg-stone-50 border-stone-200 text-stone-900',
+      badgeLetter: 'bg-stone-200 text-stone-900 border-stone-300',
+      hotkey: 'bg-stone-100 text-stone-700',
+      footerBox: 'bg-stone-100 border-t border-stone-200',
+      shuffleBtn: 'bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-300',
+      nextPageBtn: 'bg-stone-900 hover:bg-stone-800 text-white',
+    },
+  }[theme];
+
   return (
     <aside 
       id="tablet-side-carousel" 
-      className="w-full h-full flex flex-col justify-between rounded-2xl bg-white dark:bg-[#1a1e22] border-2 border-[#519CAB]/25 shadow-xl p-2.5 sm:p-3 md:p-3.5 overflow-hidden select-none min-h-0"
+      className={`w-full h-full flex flex-col justify-between rounded-2xl ${st.aside} p-2.5 sm:p-3 md:p-3.5 overflow-hidden select-none min-h-0`}
     >
       {/* Top Header: Navigation & Stats Cockpit */}
-      <div className="flex flex-col gap-1.5 border-b border-[#519CAB]/15 pb-2 flex-shrink-0">
+      <div className={`flex flex-col gap-1.5 ${st.headerBorder} pb-2 flex-shrink-0`}>
         
         {/* Row 1: Page Stepper, Range Indicator & Surah Jump */}
         <div className="flex items-center justify-between gap-1 flex-wrap sm:flex-nowrap">
           {/* Page Navigator */}
-          <div className="flex items-center gap-1 bg-white dark:bg-stone-800 p-1 rounded-xl border border-[#519CAB]/25 shadow-2xs">
+          <div className={`flex items-center gap-1 ${st.navBox} p-1 rounded-xl shadow-2xs`}>
             {/* RTL Quran Navigation: Back/Left arrow advances forward to Next Page */}
             <button
               id="side-next-page-btn"
               onClick={onNextPage}
               disabled={currentPageNumber >= 604}
-              className="p-1 rounded-lg hover:bg-[#519CAB] hover:text-white disabled:opacity-30 text-[#20373B] dark:text-stone-200 transition-colors cursor-pointer"
+              className={`p-1 rounded-lg ${st.navBtn} disabled:opacity-30 transition-colors cursor-pointer`}
               title="Next Quran Page (Advance forward in RTL)"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -242,7 +347,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
             <button
               id="side-page-picker-btn"
               onClick={onOpenPagePicker}
-              className="px-2 py-0.5 text-xs font-bold font-sans text-[#20373B] dark:text-stone-100 hover:underline cursor-pointer"
+              className="px-2 py-0.5 text-xs font-bold font-sans hover:underline cursor-pointer"
               title="Click to jump to any page or define range"
             >
               {pageViewMode === 'double' && secondaryPageNumber ? (
@@ -257,7 +362,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
               id="side-prev-page-btn"
               onClick={onPreviousPage}
               disabled={currentPageNumber <= 1}
-              className="p-1 rounded-lg hover:bg-[#519CAB] hover:text-white disabled:opacity-30 text-[#20373B] dark:text-stone-200 transition-colors cursor-pointer"
+              className={`p-1 rounded-lg ${st.navBtn} disabled:opacity-30 transition-colors cursor-pointer`}
               title="Previous Quran Page (Return toward Page 1)"
             >
               <ChevronRight className="w-4 h-4" />
@@ -270,20 +375,20 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
               <button
                 id="side-range-badge-btn"
                 onClick={onOpenRangePicker}
-                className="flex items-center gap-1 px-2 py-1 rounded-xl bg-[#519CAB] hover:bg-[#438795] text-white text-[11px] font-bold shadow-xs cursor-pointer transition-all"
+                className={`flex items-center gap-1 px-2 py-1 rounded-xl ${st.accentBtn} text-[11px] font-bold shadow-xs cursor-pointer transition-all`}
                 title={`Testing Range: Page ${activeRange.startPage} to ${activeRange.endPage}. Click to modify.`}
               >
-                <Target className="w-3 h-3 text-[#FFC64F]" />
+                <Target className={`w-3 h-3 ${st.accentIcon}`} />
                 <span>p.{activeRange.startPage}–{activeRange.endPage}</span>
               </button>
             ) : (
               <button
                 id="side-define-range-btn"
                 onClick={onOpenRangePicker}
-                className="flex items-center gap-1 px-2 py-1 rounded-xl bg-white dark:bg-stone-800 hover:bg-stone-50 text-[#20373B] dark:text-stone-200 text-[11px] font-bold border border-[#519CAB]/20 shadow-2xs cursor-pointer transition-all"
+                className={`flex items-center gap-1 px-2 py-1 rounded-xl ${st.secondaryBtn} text-[11px] font-bold cursor-pointer transition-all`}
                 title="Define a start & end page range to test sequentially"
               >
-                <Target className="w-3 h-3 text-[#519CAB]" />
+                <Target className={`w-3 h-3 ${st.secondaryIcon}`} />
                 <span>Range</span>
               </button>
             )}
@@ -292,10 +397,10 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
             <button
               id="side-surah-btn"
               onClick={onOpenSurahPicker}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#519CAB] hover:bg-[#438795] text-white font-bold text-xs shadow-sm transition-all cursor-pointer truncate max-w-[130px]"
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl ${st.accentBtn} font-bold text-xs shadow-sm transition-all cursor-pointer truncate max-w-[130px]`}
               title="Choose Surah (1-114)"
             >
-              <BookOpen className="w-3.5 h-3.5 text-[#FFC64F] flex-shrink-0" />
+              <BookOpen className={`w-3.5 h-3.5 ${st.accentIcon} flex-shrink-0`} />
               <span className="truncate">{currentSurah.englishName}</span>
             </button>
 
@@ -307,10 +412,10 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                   triggerHaptic('light');
                   onNavigateHome();
                 }}
-                className="p-1 px-2 rounded-xl bg-white hover:bg-stone-50 text-[#20373B] border border-[#519CAB]/20 shadow-xs transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+                className={`p-1 px-2 rounded-xl ${st.secondaryBtn} transition-all cursor-pointer flex items-center gap-1 active:scale-95`}
                 title="Return to Home Dashboard & Goals"
               >
-                <Home className="w-3.5 h-3.5 text-[#519CAB]" />
+                <Home className={`w-3.5 h-3.5 ${st.secondaryIcon}`} />
                 <span className="text-[10px] font-bold font-sans">Home</span>
               </button>
             )}
@@ -323,7 +428,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                   triggerHaptic('light');
                   onNavigateLeagues();
                 }}
-                className="p-1 px-2 rounded-xl bg-white hover:bg-stone-50 text-[#20373B] border border-[#519CAB]/20 shadow-xs transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+                className={`p-1 px-2 rounded-xl ${st.secondaryBtn} transition-all cursor-pointer flex items-center gap-1 active:scale-95`}
                 title="Open Social Leagues & Leaderboards"
               >
                 <Trophy className="w-3.5 h-3.5 text-[#FFC64F]" />
@@ -336,10 +441,10 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
               <button
                 id="side-open-settings-btn"
                 onClick={onOpenSettings}
-                className="p-1 px-2 rounded-xl bg-white hover:bg-stone-50 text-[#20373B] border border-[#519CAB]/20 shadow-xs transition-all cursor-pointer flex items-center gap-1"
+                className={`p-1 px-2 rounded-xl ${st.secondaryBtn} transition-all cursor-pointer flex items-center gap-1`}
                 title="Open Settings & Mode Controls"
               >
-                <Settings className="w-3.5 h-3.5 text-[#519CAB]" />
+                <Settings className={`w-3.5 h-3.5 ${st.secondaryIcon}`} />
                 <span className="text-[10px] font-bold font-sans">Settings</span>
               </button>
             )}

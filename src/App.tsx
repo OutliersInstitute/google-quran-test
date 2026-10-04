@@ -1215,6 +1215,7 @@ export default function App() {
               onOpenSettings={() => setIsSettingsOpen(true)}
               onNavigateHome={() => setActiveView('home')}
               onNavigateLeagues={() => setActiveView('leagues')}
+              theme={theme}
             />
           </section>
 
@@ -1242,6 +1243,7 @@ export default function App() {
               onNavigateHome={() => setActiveView('home')}
               onNavigateLeagues={() => setActiveView('leagues')}
               showTranslation={showTranslation}
+              theme={theme}
             />
           </div>
 
