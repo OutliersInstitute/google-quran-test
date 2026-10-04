@@ -41,6 +41,7 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
   const [showScoringRules, setShowScoringRules] = useState(false);
   const [activeTab, setActiveTab] = useState<'leaderboard' | 'activity' | 'rules'>('leaderboard');
   const [copiedCode, setCopiedCode] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
 
   const activeLeague = leagues.find(l => l.id === activeLeagueId) || leagues[0];
   const currentUserMember = activeLeague?.members.find(m => m.isCurrentUser);
@@ -109,40 +110,66 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
       {/* Top Header Navigation */}
       <header className={`sticky top-0 z-30 w-full backdrop-blur-md border-b px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-2 transition-colors ${themeClasses.headerBg}`}>
         
-        {/* Left: Back to Dashboard & League Title */}
-        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1">
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              onNavigateHome();
-            }}
-            className="p-1.5 sm:p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 opacity-80 hover:opacity-100 transition-all cursor-pointer flex items-center gap-1 text-xs font-bold flex-shrink-0"
-            title="Back to Home Dashboard"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Home</span>
-          </button>
+        {/* Left: Navigation Controls */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
+          {viewMode === 'list' ? (
+            <button
+              onClick={() => {
+                triggerHaptic('light');
+                onNavigateHome();
+              }}
+              className="p-1.5 sm:p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 opacity-80 hover:opacity-100 transition-all cursor-pointer flex items-center gap-1 text-xs font-bold flex-shrink-0"
+              title="Back to Home Dashboard"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Home</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                triggerHaptic('light');
+                setViewMode('list');
+              }}
+              className="p-1.5 sm:p-2 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold flex-shrink-0 border border-black/5 dark:border-white/5"
+              title="Return to your leagues list"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>All Leagues</span>
+            </button>
+          )}
 
           <div className="h-4 sm:h-5 w-[1px] bg-black/10 dark:bg-white/10 flex-shrink-0" />
 
-          {/* League Dropdown Selector */}
-          <div className="relative min-w-0 max-w-[140px] xs:max-w-[200px] sm:max-w-xs md:max-w-md">
-            <select
-              value={activeLeague.id}
-              onChange={(e) => {
-                triggerHaptic('light');
-                onSelectLeague(e.target.value);
-              }}
-              className="appearance-none w-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl px-2.5 sm:px-3 py-1.5 pr-7 sm:pr-8 font-display font-bold text-xs sm:text-base border border-black/10 dark:border-white/10 cursor-pointer focus:outline-none truncate"
-            >
-              {leagues.map((l) => (
-                <option key={l.id} value={l.id} className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100">
-                  🏆 {l.name} ({l.challengeStructure})
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
-          </div>
+          {viewMode === 'list' ? (
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="font-display font-extrabold text-sm sm:text-base tracking-tight truncate flex items-center gap-1.5">
+                <span>🏆</span>
+                <span>My Leagues</span>
+              </span>
+              <span className="text-[11px] opacity-60 hidden sm:inline">
+                ({leagues.length} {leagues.length === 1 ? 'circle' : 'circles'})
+              </span>
+            </div>
+          ) : (
+            /* League Dropdown Selector for Detail View */
+            <div className="relative min-w-0 max-w-[150px] xs:max-w-[200px] sm:max-w-xs md:max-w-md">
+              <select
+                value={activeLeague.id}
+                onChange={(e) => {
+                  triggerHaptic('light');
+                  onSelectLeague(e.target.value);
+                }}
+                className="appearance-none w-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl px-2.5 sm:px-3 py-1.5 pr-7 sm:pr-8 font-display font-bold text-xs sm:text-base border border-black/10 dark:border-white/10 cursor-pointer focus:outline-none truncate"
+              >
+                {leagues.map((l) => (
+                  <option key={l.id} value={l.id} className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100">
+                    🏆 {l.name} ({l.challengeStructure})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
+            </div>
+          )}
         </div>
 
         {/* Right: Quick League Actions */}
@@ -174,8 +201,122 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* VIEW MODE 1: LIST OF ALL LEAGUES (Clean, Minimal Hub) */}
+      {viewMode === 'list' ? (
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-4">
+          
+          {/* Minimal Header */}
+          <div className="flex items-center justify-between px-1 pb-1">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-display font-extrabold tracking-tight">
+                My Leagues
+              </h1>
+              <p className="text-xs opacity-60 mt-0.5">
+                Select a circle to view standings and practice
+              </p>
+            </div>
+            
+            <span className="text-xs font-mono font-bold opacity-60 px-2.5 py-1 rounded-xl bg-black/5 dark:bg-white/5">
+              {leagues.length} {leagues.length === 1 ? 'circle' : 'circles'}
+            </span>
+          </div>
+
+          {/* Minimal League Cards Stack */}
+          <div className="space-y-2.5">
+            {leagues.map((league) => {
+              const userMember = league.members.find(m => m.isCurrentUser);
+              const isCurrentActive = league.id === activeLeagueId;
+
+              return (
+                <button
+                  key={league.id}
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    onSelectLeague(league.id);
+                    setViewMode('detail');
+                  }}
+                  className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between text-left group cursor-pointer active:scale-99 ${
+                    isCurrentActive 
+                      ? `${themeClasses.cardBg} border-[#519CAB] shadow-xs` 
+                      : `${themeClasses.cardBg} hover:border-[#519CAB]/40`
+                  }`}
+                >
+                  {/* Left: Emblem & Details */}
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                      isCurrentActive 
+                        ? `${themeClasses.accentBg}` 
+                        : 'bg-black/5 dark:bg-white/5 opacity-80 group-hover:opacity-100'
+                    }`}>
+                      <Trophy className="w-5 h-5" />
+                    </div>
+
+                    <div className="min-w-0 flex-1 pr-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-display font-bold text-base leading-tight truncate">
+                          {league.name}
+                        </h3>
+                        {isCurrentActive && (
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" title="Active Circle" />
+                        )}
+                      </div>
+
+                      <div className="text-xs opacity-60 mt-0.5 truncate flex items-center gap-1.5 font-sans">
+                        <span className="truncate">{league.target.description}</span>
+                        <span>•</span>
+                        <span className="flex-shrink-0">{league.members.length} members</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Personal Rank & Arrow */}
+                  <div className="flex items-center gap-2.5 flex-shrink-0">
+                    {userMember && (
+                      <div className="text-right">
+                        <div className="text-xs font-bold font-mono">
+                          Rank #{userMember.rank}
+                        </div>
+                        <div className="text-[10px] opacity-60 font-mono">
+                          {userMember.weeklyXp} XP
+                        </div>
+                      </div>
+                    )}
+                    <ChevronRight className="w-4 h-4 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Minimal Action Footer */}
+          <div className="pt-4 flex items-center justify-center gap-3 text-xs">
+            <button
+              onClick={() => {
+                triggerHaptic('light');
+                setIsJoinOpen(true);
+              }}
+              className="font-bold opacity-70 hover:opacity-100 flex items-center gap-1.5 py-2 px-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-[#519CAB]" />
+              <span>Join with Code</span>
+            </button>
+            <span className="opacity-20">•</span>
+            <button
+              onClick={() => {
+                triggerHaptic('medium');
+                setIsCreateOpen(true);
+              }}
+              className="font-bold opacity-70 hover:opacity-100 flex items-center gap-1.5 py-2 px-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create Circle</span>
+            </button>
+          </div>
+
+        </main>
+      ) : (
+        /* VIEW MODE 2: DETAILED LEAGUE PAGE (Hero & Tabs) */
+        <main className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
         
         {/* UNIFIED HERO CARD: Quick League Info & Your Personal Standing (Neat & Clean like HomeScreen) */}
         <section className={`rounded-3xl p-4 sm:p-6 md:p-7 border overflow-hidden ${themeClasses.cardBg}`}>
@@ -640,6 +781,7 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
         )}
 
       </main>
+      )}
 
       {/* Modals */}
       <CreateLeagueModal

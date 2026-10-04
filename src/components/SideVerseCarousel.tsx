@@ -238,6 +238,17 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
       footerBox: 'bg-white border-t border-[#519CAB]/15',
       shuffleBtn: 'bg-stone-100 hover:bg-stone-200 text-[#20373B] border border-[#519CAB]/20',
       nextPageBtn: 'bg-[#519CAB] hover:bg-[#438795] text-white',
+      actionPrimary: 'bg-[#519CAB] hover:bg-[#438795] text-white shadow-md',
+      actionPrimaryIcon: 'text-[#FFC64F]',
+      actionSecondary: 'bg-stone-100 hover:bg-stone-200 text-[#20373B] border border-[#519CAB]/20',
+      audioBtn: 'bg-[#519CAB]/15 hover:bg-[#519CAB]/25 text-[#20373B] border border-[#519CAB]/30',
+      audioIcon: 'text-[#519CAB]',
+      pillActive: 'bg-[#519CAB] text-white font-bold',
+      pillDefault: 'hover:bg-[#519CAB]/10 text-[#20373B]',
+      blankTabActive: 'bg-[#519CAB] text-white border-[#438795] shadow-xs font-bold',
+      blankTabDefault: 'bg-white text-[#20373B] border border-[#519CAB]/20',
+      contextPill: 'bg-[#519CAB]/10 text-[#519CAB] border border-[#519CAB]/20',
+      contextBlankHighlight: 'text-[#519CAB] bg-[#519CAB]/10 border-b-2 border-[#519CAB]',
     },
     parchment: {
       aside: 'bg-[#fcf9f2] dark:bg-[#181c20] text-stone-900 dark:text-stone-100 border-2 border-amber-900/25 shadow-xl',
@@ -258,6 +269,17 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
       footerBox: 'bg-amber-950/5 dark:bg-stone-900/80 border-t border-amber-900/15',
       shuffleBtn: 'bg-amber-100 dark:bg-stone-800 hover:bg-amber-200 text-amber-950 dark:text-amber-200 border border-amber-900/15',
       nextPageBtn: 'bg-gradient-to-r from-emerald-700 via-emerald-800 to-amber-900 hover:from-emerald-600 text-white',
+      actionPrimary: 'bg-amber-800 hover:bg-amber-700 text-amber-50 shadow-md',
+      actionPrimaryIcon: 'text-amber-300',
+      actionSecondary: 'bg-amber-100 dark:bg-stone-800 hover:bg-amber-200 text-amber-950 dark:text-amber-200 border border-amber-900/15',
+      audioBtn: 'bg-amber-200/70 hover:bg-amber-300 text-amber-950 border border-amber-800/30',
+      audioIcon: 'text-amber-900',
+      pillActive: 'bg-amber-800 text-white font-bold',
+      pillDefault: 'hover:bg-amber-900/10 text-amber-950 dark:text-amber-200',
+      blankTabActive: 'bg-amber-800 text-white border-amber-900 shadow-xs font-bold',
+      blankTabDefault: 'bg-amber-100 dark:bg-stone-800 border border-amber-900/20 text-amber-900 dark:text-amber-200',
+      contextPill: 'bg-amber-200/50 text-amber-900/80 dark:text-amber-300/80',
+      contextBlankHighlight: 'text-amber-900 dark:text-amber-300 bg-amber-100/80 dark:bg-stone-800 border-b-2 border-amber-800',
     },
     emerald: {
       aside: 'bg-[#f3f7f4] text-[#0f281e] border-2 border-emerald-900/25 shadow-xl',
@@ -278,6 +300,17 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
       footerBox: 'bg-emerald-950/5 border-t border-emerald-900/15',
       shuffleBtn: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-900/15',
       nextPageBtn: 'bg-emerald-800 hover:bg-emerald-700 text-white',
+      actionPrimary: 'bg-emerald-800 hover:bg-emerald-700 text-white shadow-md',
+      actionPrimaryIcon: 'text-emerald-200',
+      actionSecondary: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-900/15',
+      audioBtn: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-800/30',
+      audioIcon: 'text-emerald-900',
+      pillActive: 'bg-emerald-800 text-white font-bold',
+      pillDefault: 'hover:bg-emerald-900/10 text-emerald-950',
+      blankTabActive: 'bg-emerald-800 text-white border-emerald-900 shadow-xs font-bold',
+      blankTabDefault: 'bg-emerald-50 border border-emerald-900/20 text-emerald-900',
+      contextPill: 'bg-emerald-100 text-emerald-900',
+      contextBlankHighlight: 'text-emerald-900 bg-emerald-100 border-b-2 border-emerald-800',
     },
     midnight: {
       aside: 'bg-[#14181c] text-[#f1ece1] border-2 border-stone-800 shadow-xl',
@@ -298,6 +331,17 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
       footerBox: 'bg-[#181d22] border-t border-stone-800',
       shuffleBtn: 'bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700',
       nextPageBtn: 'bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold',
+      actionPrimary: 'bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold shadow-md',
+      actionPrimaryIcon: 'text-stone-950',
+      actionSecondary: 'bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700',
+      audioBtn: 'bg-stone-800 hover:bg-stone-700 text-amber-400 border border-stone-700',
+      audioIcon: 'text-amber-400',
+      pillActive: 'bg-amber-500 text-stone-950 font-bold',
+      pillDefault: 'hover:bg-stone-700 text-stone-200',
+      blankTabActive: 'bg-amber-500 text-stone-950 border-amber-600 shadow-xs font-bold',
+      blankTabDefault: 'bg-stone-800/80 border border-stone-700 text-stone-300',
+      contextPill: 'bg-stone-800 text-amber-400',
+      contextBlankHighlight: 'text-amber-400 bg-stone-800 border-b-2 border-amber-500',
     },
     'classic-white': {
       aside: 'bg-[#fcfcfc] text-stone-900 border-2 border-stone-300 shadow-xl',
@@ -318,8 +362,19 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
       footerBox: 'bg-stone-100 border-t border-stone-200',
       shuffleBtn: 'bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-300',
       nextPageBtn: 'bg-stone-900 hover:bg-stone-800 text-white',
+      actionPrimary: 'bg-stone-900 hover:bg-stone-800 text-white shadow-md',
+      actionPrimaryIcon: 'text-stone-300',
+      actionSecondary: 'bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-300',
+      audioBtn: 'bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-300',
+      audioIcon: 'text-stone-900',
+      pillActive: 'bg-stone-900 text-white font-bold',
+      pillDefault: 'hover:bg-stone-200 text-stone-900',
+      blankTabActive: 'bg-stone-900 text-white border-stone-950 shadow-xs font-bold',
+      blankTabDefault: 'bg-stone-100 border border-stone-300 text-stone-800',
+      contextPill: 'bg-stone-100 text-stone-800',
+      contextBlankHighlight: 'text-stone-900 bg-stone-100 border-b-2 border-stone-900',
     },
-  }[theme];
+  }[theme || 'moonstone'];
 
   return (
     <aside 
@@ -551,19 +606,19 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
         {/* Row 4: Multi-Blank Step Tabs (Click to jump to any blank) */}
         {totalBlanks > 1 && (
           <div className="flex items-center gap-1.5 pt-1 overflow-x-auto no-scrollbar" id="multi-blank-tabs">
-            <span className="text-[10px] font-bold text-stone-500 flex-shrink-0">
+            <span className="text-[10px] font-bold opacity-60 flex-shrink-0">
               Blanks ({answeredCount}/{totalBlanks}):
             </span>
             <div className="flex items-center gap-1 flex-1">
               {blankTargets.map((target, idx) => {
                 const isActive = idx === activeBlankIndex;
-                let btnStyle = "bg-amber-100 dark:bg-stone-800 border-amber-900/20 text-amber-900 dark:text-amber-200";
+                let btnStyle = st.blankTabDefault;
                 if (target.isAnswered) {
                   btnStyle = target.isCorrect
                     ? "bg-emerald-600 text-white border-emerald-700 font-bold"
                     : "bg-rose-600 text-white border-rose-700 font-bold";
                 } else if (isActive) {
-                  btnStyle = "bg-red-600 text-white border-red-700 font-bold shadow-xs";
+                  btnStyle = st.blankTabActive;
                 }
 
                 return (
@@ -712,10 +767,10 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                     </span>
                   )}
                   {activeTarget && (
-                    <span className="text-[10px] font-bold text-amber-900/80 dark:text-amber-300/80 bg-amber-200/50 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                    <span className={`text-[10px] font-bold ${st.contextPill} px-1.5 py-0.5 rounded-md flex items-center gap-1`}>
                       <span>Ayah {activeTarget.ayahNumberInSurah}</span>
                       {activeTarget.subAyahPart && (
-                        <span className="bg-amber-800 text-white px-1 py-0.2 rounded text-[9px] font-bold">
+                        <span className={`px-1 py-0.2 rounded text-[9px] font-bold ${st.accentBtn}`}>
                           Part {activeTarget.subAyahPart.partIndex}/{activeTarget.subAyahPart.totalParts} ({activeTarget.subAyahPart.label})
                         </span>
                       )}
@@ -726,31 +781,31 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
 
               {/* Multi-Section Portion context if portion challenge */}
               {activeTarget?.hiddenType === 'portion' && (
-                <div className="p-2 rounded-xl bg-amber-100/70 dark:bg-stone-800/90 border border-amber-900/20 mb-1.5 text-right shadow-xs" dir="rtl">
+                <div className={`p-2 rounded-xl ${st.portionBanner} mb-1.5 text-right shadow-xs`} dir="rtl">
                   {activeTarget.portionSection === 'start' || (!activeTarget.visiblePrefix && activeTarget.visibleSuffix) ? (
                     <>
-                      <span className="text-[10px] font-sans font-bold text-amber-900 dark:text-amber-300 block mb-0.5">
+                      <span className={`text-[10px] font-sans font-bold ${st.portionTitle} block mb-0.5`}>
                         ✦ بِدَايَةُ الآيَةِ {activeTarget.subAyahPart?.label ? `(${activeTarget.subAyahPart.label})` : '(Beginning Section)'}:
                       </span>
-                      <span className="font-quran text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 leading-relaxed">
+                      <span className="font-quran text-sm sm:text-base font-bold leading-relaxed">
                         <span className="text-red-600 dark:text-red-400 font-extrabold px-1 bg-red-100/80 dark:bg-red-950/50 rounded">[ ... ؟؟؟ ]</span> {activeTarget.visibleSuffix}
                       </span>
                     </>
                   ) : activeTarget.portionSection === 'middle' || (activeTarget.visiblePrefix && activeTarget.visibleSuffix) ? (
                     <>
-                      <span className="text-[10px] font-sans font-bold text-amber-900 dark:text-amber-300 block mb-0.5">
+                      <span className={`text-[10px] font-sans font-bold ${st.portionTitle} block mb-0.5`}>
                         ✦ وَسَطُ الآيَةِ {activeTarget.subAyahPart?.label ? `(${activeTarget.subAyahPart.label})` : '(Middle Section)'}:
                       </span>
-                      <span className="font-quran text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 leading-relaxed">
+                      <span className="font-quran text-sm sm:text-base font-bold leading-relaxed">
                         {activeTarget.visiblePrefix} <span className="text-red-600 dark:text-red-400 font-extrabold px-1 bg-red-100/80 dark:bg-red-950/50 rounded">[ ... ؟؟؟ ]</span> {activeTarget.visibleSuffix}
                       </span>
                     </>
                   ) : (
                     <>
-                      <span className="text-[10px] font-sans font-bold text-amber-900 dark:text-amber-300 block mb-0.5">
+                      <span className={`text-[10px] font-sans font-bold ${st.portionTitle} block mb-0.5`}>
                         ✦ خَاتِمَةُ الآيَةِ {activeTarget.subAyahPart?.label ? `(${activeTarget.subAyahPart.label})` : '(Ending Clause)'}:
                       </span>
-                      <span className="font-quran text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 leading-relaxed">
+                      <span className="font-quran text-sm sm:text-base font-bold leading-relaxed">
                         {activeTarget.visiblePrefix} <span className="text-red-600 dark:text-red-400 font-extrabold px-1 bg-red-100/80 dark:bg-red-950/50 rounded">[ ... ؟؟؟ ]</span>
                       </span>
                     </>
@@ -761,7 +816,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
 
             {/* Options List (Vertical Stack) */}
             {!activeTarget ? (
-              <div className="flex-1 flex items-center justify-center p-6 text-center text-xs text-amber-900/70">
+              <div className="flex-1 flex items-center justify-center p-6 text-center text-xs opacity-70">
                 Generating blanks for Page {currentPageNumber}...
               </div>
             ) : (
@@ -774,8 +829,8 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                   const optionLetter = ['A', 'B', 'C', 'D'][idx] || `${idx + 1}`;
                   const hotkeyNumber = `${idx + 1}`;
 
-                  let cardStyle = "bg-white dark:bg-stone-800 hover:bg-stone-50 border-[#519CAB]/30 text-[#20373B] dark:text-stone-100";
-                  let badgeStyle = "bg-stone-100 text-[#20373B] border-[#519CAB]/30";
+                  let cardStyle = st.cardDefault;
+                  let badgeStyle = st.badgeLetter;
 
                   if (activeTarget?.isAnswered) {
                     if (option.isCorrect) {
@@ -898,7 +953,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
       </div>
 
       {/* Bottom Action Footer: Next Question / Next Page / Difficulty */}
-      <div className="flex flex-col gap-1.5 border-t border-amber-900/15 pt-2 flex-shrink-0">
+      <div className={`flex flex-col gap-1.5 ${st.footerBox} p-2.5 sm:p-3 flex-shrink-0`}>
         
         {/* Next Question / Next Blank Action Buttons */}
         <div className="flex items-center gap-2">
@@ -918,21 +973,21 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                   }
                 }
               }}
-              className="flex-1 py-2 px-3 rounded-xl bg-amber-800 hover:bg-amber-700 text-amber-50 font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+              className={`flex-1 py-2 px-3 rounded-xl ${st.actionPrimary} font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98`}
             >
               <span>{activeTarget?.isAnswered ? 'Next Blank' : 'Next Blank Step'}</span>
               <span className="hidden sm:inline text-[10px] opacity-70 font-mono flex items-center gap-0.5">
                 <CornerDownLeft className="w-3 h-3" /> Space
               </span>
-              <ArrowRight className="w-4 h-4 text-amber-300" />
+              <ArrowRight className={`w-4 h-4 ${st.actionPrimaryIcon}`} />
             </button>
           ) : (
             <button
               id="side-next-challenge-btn"
               onClick={onNextQuestion}
-              className="flex-1 py-2 px-3 rounded-xl bg-amber-800 hover:bg-amber-700 text-amber-50 font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+              className={`flex-1 py-2 px-3 rounded-xl ${st.actionPrimary} font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98`}
             >
-              <Shuffle className="w-4 h-4 text-amber-300" />
+              <Shuffle className={`w-4 h-4 ${st.actionPrimaryIcon}`} />
               <span>Shuffle New Blanks</span>
             </button>
           )}
@@ -941,39 +996,39 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
             <button
               id="side-listen-audio-btn"
               onClick={() => onPlayAudio?.(activeTarget.fullAyah.audio)}
-              className="p-2 rounded-xl bg-amber-200/70 hover:bg-amber-300 text-amber-950 border border-amber-800/30 transition-colors cursor-pointer"
+              className={`p-2 rounded-xl ${st.audioBtn} transition-colors cursor-pointer`}
               title="Listen to ayah recitation"
             >
-              <Volume2 className="w-4 h-4 text-amber-900" />
+              <Volume2 className={`w-4 h-4 ${st.audioIcon}`} />
             </button>
           )}
 
           <button
             id="side-reset-page-blanks-btn"
             onClick={onResetPageBlanks}
-            className="p-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-900/20 transition-colors cursor-pointer"
+            className={`p-2 rounded-xl ${st.actionSecondary} transition-colors cursor-pointer`}
             title="Reset answers on this page"
           >
-            <RotateCcw className="w-4 h-4 text-amber-900" />
+            <RotateCcw className={`w-4 h-4 ${st.audioIcon}`} />
           </button>
         </div>
 
         {/* Difficulty & Mode Selector Pills */}
-        <div className="flex items-center justify-between text-[11px] text-amber-950 dark:text-amber-200 font-bold pt-0.5">
+        <div className="flex items-center justify-between text-[11px] font-bold pt-0.5 opacity-90">
           <div className="flex items-center gap-1">
             <span className="opacity-70 text-[10px]">Mode:</span>
             <button
               onClick={() => onChangeChallengeType('full-ayah')}
-              className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer ${
-                challengeType === 'full-ayah' ? 'bg-amber-800 text-white' : 'hover:bg-amber-900/10'
+              className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer transition-all ${
+                challengeType === 'full-ayah' ? st.pillActive : st.pillDefault
               }`}
             >
               Full
             </button>
             <button
               onClick={() => onChangeChallengeType('portion-ayah')}
-              className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer ${
-                challengeType === 'portion-ayah' ? 'bg-amber-800 text-white' : 'hover:bg-amber-900/10'
+              className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer transition-all ${
+                challengeType === 'portion-ayah' ? st.pillActive : st.pillDefault
               }`}
             >
               Portion
@@ -984,24 +1039,24 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
             <span className="opacity-70 text-[10px]">Level:</span>
             <button
               onClick={() => onChangeDifficulty('easy')}
-              className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer ${
-                difficulty === 'easy' ? 'bg-amber-800 text-white' : 'hover:bg-amber-900/10'
+              className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer transition-all ${
+                difficulty === 'easy' ? st.pillActive : st.pillDefault
               }`}
             >
               Easy
             </button>
             <button
               onClick={() => onChangeDifficulty('medium')}
-              className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer ${
-                difficulty === 'medium' ? 'bg-amber-800 text-white' : 'hover:bg-amber-900/10'
+              className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer transition-all ${
+                difficulty === 'medium' ? st.pillActive : st.pillDefault
               }`}
             >
               Med
             </button>
             <button
               onClick={() => onChangeDifficulty('hafiz')}
-              className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer ${
-                difficulty === 'hafiz' ? 'bg-amber-800 text-white' : 'hover:bg-amber-900/10'
+              className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer transition-all ${
+                difficulty === 'hafiz' ? st.pillActive : st.pillDefault
               }`}
             >
               Hafiz
