@@ -40,6 +40,16 @@ import { AudioReciter } from './components/AudioReciter';
 import { Loader2, Home, Target, Play } from 'lucide-react';
 import { SURAH_METADATA_LIST } from './data/surahList';
 import { triggerHaptic, getHapticsEnabled, setHapticsEnabled } from './utils/haptics';
+import { 
+  ensureSignedIn, 
+  onAuthUser, 
+  signInWithGoogle, 
+  signOutUser, 
+  createCloudLeague, 
+  joinCloudLeagueByCode, 
+  awardCloudXp,
+  getLocalGuestUser
+} from './lib/firebase';
 
 const STATS_STORAGE_KEY = 'mushaf_15line_game_stats_v3';
 const BLANK_COUNT_STORAGE_KEY = 'mushaf_blank_count_pref_v1';
@@ -270,6 +280,28 @@ export default function App() {
   const [leagues, setLeagues] = useState<League[]>(() => loadStoredLeagues());
   const [activeLeagueId, setActiveLeagueId] = useState<string>(() => loadActiveLeagueId(leagues));
   const [xpNotification, setXpNotification] = useState<XpEventNotification | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Initialize Firebase Auth on boot
+  useEffect(() => {
+    ensureSignedIn().then(u => {
+      if (u) {
+        setCurrentUser(u);
+      } else {
+        setCurrentUser(getLocalGuestUser());
+      }
+    }).catch(() => {
+      setCurrentUser(getLocalGuestUser());
+    });
+    const unsub = onAuthUser(u => {
+      if (u) {
+        setCurrentUser(u);
+      } else {
+        setCurrentUser(getLocalGuestUser());
+      }
+    });
+    return () => unsub();
+  }, []);
 
   const activeLeague = useMemo(() => {
     return leagues.find(l => l.id === activeLeagueId) || leagues[0];
@@ -280,7 +312,7 @@ export default function App() {
     saveActiveLeagueId(id);
   };
 
-  const handleCreateLeague = (data: any) => {
+  const handleCreateLeague = async (data: any) => {
     const res = createNewLeague(leagues, data);
     setLeagues(res.leagues);
     setActiveLeagueId(res.newLeague.id);
@@ -290,9 +322,29 @@ export default function App() {
       label: `Created League "${data.name}"!`,
       timestamp: Date.now(),
     });
+
+    if (currentUser?.uid) {
+      await createCloudLeague({
+        name: data.name,
+        description: data.description || '',
+        challengeStructure: data.challengeStructure || 'weekly',
+        targetDescription: data.target?.description || 'Quran Practice',
+        startPage: data.target?.startPage,
+        endPage: data.target?.endPage,
+      }, {
+        uid: currentUser.uid,
+        displayName: currentUser.displayName || 'Quran Student'
+      });
+    }
   };
 
-  const handleJoinLeagueCode = (code: string) => {
+  const handleJoinLeagueCode = async (code: string) => {
+    if (currentUser?.uid) {
+      await joinCloudLeagueByCode(code, {
+        uid: currentUser.uid,
+        displayName: currentUser.displayName || 'Quran Student'
+      });
+    }
     const res = joinLeagueByCode(leagues, code);
     setLeagues(res.updatedLeagues);
     if (res.league) {
@@ -791,6 +843,9 @@ export default function App() {
       const xpRes = awardXpToUser(leagues, activeLeagueId, SCORING_RULES.AYAH_CORRECT, 'ayah', 'Correct Ayah Blank');
       setLeagues(xpRes.updatedLeagues);
       setXpNotification(xpRes.notification);
+      if (currentUser?.uid && activeLeagueId) {
+        awardCloudXp(activeLeagueId, currentUser.uid, SCORING_RULES.AYAH_CORRECT, currentUser.displayName || 'You', 'Correct Ayah Blank', 'ayah');
+      }
     }
 
     // Update range stats if in active range session
@@ -815,6 +870,9 @@ export default function App() {
         const pageXp = awardXpToUser(leagues, activeLeagueId, SCORING_RULES.PAGE_COMPLETED, 'page', `Medina Page ${currentPageNumber} Mastered`);
         setLeagues(pageXp.updatedLeagues);
         setXpNotification(pageXp.notification);
+        if (currentUser?.uid && activeLeagueId) {
+          awardCloudXp(activeLeagueId, currentUser.uid, SCORING_RULES.PAGE_COMPLETED, currentUser.displayName || 'You', `Page ${currentPageNumber} Mastered`, 'page');
+        }
       }
       const updated: DailyProgressData = {
         ...prev,
@@ -940,6 +998,9 @@ export default function App() {
           onStartPractice={handleStartPractice}
           onNavigateHome={() => setActiveView('home')}
           theme={theme}
+          currentUser={currentUser}
+          onSignInGoogle={signInWithGoogle}
+          onSignOut={signOutUser}
         />
       ) : (
         /* Main Tablet / Mobile Cockpit Workspace - Maximize screen space */

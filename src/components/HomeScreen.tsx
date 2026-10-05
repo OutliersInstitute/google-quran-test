@@ -355,9 +355,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </div>
 
               <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#519CAB]">
-                {currentLeagueMember && (
+                {currentLeagueMember ? (
                   <span className="hidden sm:inline-block">
                     {currentLeagueMember.points} XP
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-bold">
+                    Join or Create
                   </span>
                 )}
                 <ChevronRight className="w-5 h-5 opacity-60 group-hover:translate-x-1 transition-transform" />

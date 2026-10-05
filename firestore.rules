@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net: Default Deny All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // User Profile Rules
+    match /users/{userId} {
+      function isValidUserProfile(data) {
+        return data.keys().hasAll(['userId', 'displayName']) &&
+               data.userId == request.auth.uid &&
+               data.displayName is string && data.displayName.size() > 0 && data.displayName.size() <= 60 &&
+               (!('totalXp' in data) || data.totalXp is number) &&
+               (!('streakDays' in data) || data.streakDays is number) &&
+               (!('joinedLeagueIds' in data) || (data.joinedLeagueIds is list && data.joinedLeagueIds.size() <= 50));
+      }
+
+      allow get: if true;
+      allow create: if isSignedIn() && userId == request.auth.uid && isValidId(userId) && isValidUserProfile(incoming());
+      allow update: if isSignedIn() && userId == request.auth.uid && isValidUserProfile(incoming()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'avatarColor', 'avatarEmoji', 'totalXp', 'streakDays', 'joinedLeagueIds', 'updatedAt']);
+    }
+
+    // Leagues Collection
+    match /leagues/{leagueId} {
+      function isValidLeague(data) {
+        return data.keys().hasAll(['name', 'inviteCode', 'creatorId', 'challengeStructure', 'targetDescription']) &&
+               data.creatorId == request.auth.uid &&
+               data.name is string && data.name.size() > 0 && data.name.size() <= 80 &&
+               data.inviteCode is string && data.inviteCode.size() > 0 && data.inviteCode.size() <= 20 &&
+               data.targetDescription is string && data.targetDescription.size() <= 150 &&
+               (!('description' in data) || (data.description is string && data.description.size() <= 300));
+      }
+
+      // Public reads allow guests and members to view circles & leaderboards
+      allow get: if isValidId(leagueId);
+      allow list: if true;
+      allow create: if isSignedIn() && isValidId(leagueId) && isValidLeague(incoming());
+      allow update: if isSignedIn() && existing().creatorId == request.auth.uid &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'memberCount', 'targetDescription']);
+
+      // League Members Subcollection
+      match /members/{memberId} {
+        function isValidLeagueMember(data) {
+          return data.keys().hasAll(['userId', 'name', 'points']) &&
+                 data.userId == request.auth.uid &&
+                 data.name is string && data.name.size() > 0 && data.name.size() <= 60 &&
+                 data.points is number && data.points >= 0 &&
+                 (!('rank' in data) || data.rank is number) &&
+                 (!('streakDays' in data) || data.streakDays is number) &&
+                 (!('completedToday' in data) || data.completedToday is bool);
+        }
+
+        allow get, list: if true;
+        allow create: if isSignedIn() && memberId == request.auth.uid && isValidId(memberId) && isValidLeagueMember(incoming());
+        allow update: if isSignedIn() && memberId == request.auth.uid && isValidLeagueMember(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['points', 'todayPoints', 'rank', 'streakDays', 'completedToday', 'progressCurrent', 'progressTarget', 'progressPercent', 'dailyActivity', 'statusMessage']);
+      }
+
+      // League Activity Subcollection
+      match /activity/{activityId} {
+        function isValidLeagueActivity(data) {
+          return data.keys().hasAll(['userId', 'memberName', 'actionText', 'pointsEarned', 'timestamp']) &&
+                 data.userId == request.auth.uid &&
+                 data.memberName is string && data.memberName.size() <= 60 &&
+                 data.actionText is string && data.actionText.size() <= 150 &&
+                 data.pointsEarned is number &&
+                 data.timestamp is number;
+        }
+
+        allow get, list: if true;
+        allow create: if isSignedIn() && isValidId(activityId) && isValidLeagueActivity(incoming());
+      }
+    }
+  }
+}

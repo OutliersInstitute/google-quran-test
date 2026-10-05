@@ -417,16 +417,19 @@ export const loadStoredLeagues = (): League[] => {
     const raw = localStorage.getItem(LEAGUES_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+      if (Array.isArray(parsed)) {
+        // Filter out legacy hardcoded sample leagues
+        const filtered = parsed.filter(l => !['league-juz-amma', 'league-daily-fajr', 'league-surah-mulk'].includes(l.id));
+        if (filtered.length !== parsed.length) {
+          saveStoredLeagues(filtered);
+        }
+        return filtered;
       }
     }
   } catch (e) {
     console.error('Failed to load leagues from localStorage', e);
   }
-  const defaults = getInitialLeagues();
-  saveStoredLeagues(defaults);
-  return defaults;
+  return [];
 };
 
 export const saveStoredLeagues = (leagues: League[]): void => {

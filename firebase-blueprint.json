@@ -1,0 +1,92 @@
+{
+  "entities": {
+    "userProfile": {
+      "title": "UserProfile",
+      "description": "Public user profile and stats",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 60 },
+        "avatarColor": { "type": "string", "maxLength": 20 },
+        "avatarEmoji": { "type": "string", "maxLength": 10 },
+        "totalXp": { "type": "number" },
+        "streakDays": { "type": "number" },
+        "joinedLeagueIds": { "type": "array" },
+        "createdAt": { "type": "string", "maxLength": 40 },
+        "updatedAt": { "type": "string", "maxLength": 40 }
+      },
+      "required": ["userId", "displayName"]
+    },
+    "league": {
+      "title": "League",
+      "description": "A study circle / league created by a user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 80 },
+        "description": { "type": "string", "maxLength": 300 },
+        "inviteCode": { "type": "string", "maxLength": 20 },
+        "creatorId": { "type": "string", "maxLength": 128 },
+        "creatorName": { "type": "string", "maxLength": 60 },
+        "challengeStructure": { "type": "string", "maxLength": 30 },
+        "targetDescription": { "type": "string", "maxLength": 150 },
+        "startPage": { "type": "number" },
+        "endPage": { "type": "number" },
+        "memberCount": { "type": "number" },
+        "createdAt": { "type": "string", "maxLength": 40 }
+      },
+      "required": ["name", "inviteCode", "creatorId", "challengeStructure", "targetDescription"]
+    },
+    "leagueMember": {
+      "title": "LeagueMember",
+      "description": "A member participating in a study circle",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 60 },
+        "avatarColor": { "type": "string", "maxLength": 20 },
+        "avatarEmoji": { "type": "string", "maxLength": 10 },
+        "points": { "type": "number" },
+        "todayPoints": { "type": "number" },
+        "rank": { "type": "number" },
+        "streakDays": { "type": "number" },
+        "completedToday": { "type": "boolean" },
+        "joinedDate": { "type": "string", "maxLength": 40 }
+      },
+      "required": ["userId", "name", "points"]
+    },
+    "leagueActivity": {
+      "title": "LeagueActivity",
+      "description": "An activity or milestone logged in the league",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "memberName": { "type": "string", "maxLength": 60 },
+        "actionText": { "type": "string", "maxLength": 150 },
+        "pointsEarned": { "type": "number" },
+        "timestamp": { "type": "number" },
+        "type": { "type": "string", "maxLength": 30 }
+      },
+      "required": ["userId", "memberName", "actionText", "pointsEarned", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "userProfile" },
+      "description": "User profile with display name and joined league IDs"
+    },
+    "/leagues/{leagueId}": {
+      "schema": { "$ref": "league" },
+      "description": "Collection of all study circles and leagues"
+    },
+    "/leagues/{leagueId}/members/{memberId}": {
+      "schema": { "$ref": "leagueMember" },
+      "description": "Members participating in this league"
+    },
+    "/leagues/{leagueId}/activity/{activityId}": {
+      "schema": { "$ref": "leagueActivity" },
+      "description": "Activity stream items for this league"
+    }
+  }
+}

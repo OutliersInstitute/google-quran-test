@@ -22,6 +22,9 @@ interface LeagueDashboardProps {
   onStartPractice: (pageNumber?: number) => void;
   onNavigateHome: () => void;
   theme: MushafTheme;
+  currentUser?: any;
+  onSignInGoogle?: () => void;
+  onSignOut?: () => void;
 }
 
 export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
@@ -33,6 +36,9 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
   onStartPractice,
   onNavigateHome,
   theme,
+  currentUser,
+  onSignInGoogle,
+  onSignOut,
 }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isJoinOpen, setIsJoinOpen] = useState(false);
@@ -42,9 +48,6 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
   const [activeTab, setActiveTab] = useState<'leaderboard' | 'activity' | 'rules'>('leaderboard');
   const [copiedCode, setCopiedCode] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
-
-  const activeLeague = leagues.find(l => l.id === activeLeagueId) || leagues[0];
-  const currentUserMember = activeLeague?.members.find(m => m.isCurrentUser);
 
   // Theme styling
   const themeClasses = {
@@ -100,8 +103,228 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
     },
   }[theme];
 
-  if (!activeLeague) return null;
+  // ONBOARDING / SIGN UP VIEW (Shown when user has not joined any leagues yet)
+  if (leagues.length === 0) {
+    return (
+      <div className={`min-h-full w-full overflow-y-auto ${themeClasses.bg} pb-16 transition-colors duration-300`}>
+        {/* Top Header */}
+        <header className={`sticky top-0 z-30 w-full backdrop-blur-md border-b px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-2 transition-colors ${themeClasses.headerBg}`}>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                triggerHaptic('light');
+                onNavigateHome();
+              }}
+              className="p-1.5 sm:p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 opacity-80 hover:opacity-100 transition-all cursor-pointer flex items-center gap-1 text-xs font-bold"
+              title="Back to Home Dashboard"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Home</span>
+            </button>
+            <div className="h-4 sm:h-5 w-[1px] bg-black/10 dark:bg-white/10" />
+            <span className="font-display font-bold text-xs sm:text-sm">Study Circles</span>
+          </div>
 
+          <div className="flex items-center gap-2">
+            {currentUser && !currentUser.isAnonymous ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-bold opacity-80 truncate max-w-[120px] sm:max-w-[180px]">
+                  {currentUser.displayName || currentUser.email || 'Signed In'}
+                </span>
+                {onSignOut && (
+                  <button
+                    onClick={onSignOut}
+                    className="text-[11px] opacity-60 hover:opacity-100 underline cursor-pointer"
+                  >
+                    Sign out
+                  </button>
+                )}
+              </div>
+            ) : (
+              <span className="text-[11px] font-bold opacity-60">100% Free & Ad-Free</span>
+            )}
+          </div>
+        </header>
+
+        {/* Hero Marketing & Benefits */}
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-8">
+          
+          {/* Hero Header */}
+          <div className="text-center space-y-3">
+            <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto shadow-sm">
+              <Trophy className="w-8 h-8" />
+            </div>
+            
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold tracking-tight">
+              Memorize Quran Together
+            </h1>
+            
+            <p className="text-xs sm:text-sm opacity-75 max-w-md mx-auto leading-relaxed">
+              Create or join friendly Hifz study circles with your family, friends, or halaqah. Track daily Ayah targets, earn XP on the Medina Mushaf, and stay consistent.
+            </p>
+          </div>
+
+          {/* Benefits Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
+            <div className={`p-4 rounded-2xl border ${themeClasses.cardBg} space-y-1.5`}>
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center text-sm font-bold">
+                🎯
+              </div>
+              <h3 className="font-display font-bold text-sm">Custom Hifz Milestones</h3>
+              <p className="text-xs opacity-70 leading-normal">
+                Set goals for Juz 30, Surah Al-Mulk, or custom Medina Mushaf page ranges tailored to your group.
+              </p>
+            </div>
+
+            <div className={`p-4 rounded-2xl border ${themeClasses.cardBg} space-y-1.5`}>
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-sm font-bold">
+                ⚡
+              </div>
+              <h3 className="font-display font-bold text-sm">Live Shared Leaderboards</h3>
+              <p className="text-xs opacity-70 leading-normal">
+                Watch rankings and progress update in real-time as you and your friends solve blanks on the Mushaf.
+              </p>
+            </div>
+
+            <div className={`p-4 rounded-2xl border ${themeClasses.cardBg} space-y-1.5`}>
+              <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center text-sm font-bold">
+                🔥
+              </div>
+              <h3 className="font-display font-bold text-sm">Daily Habit & Streaks</h3>
+              <p className="text-xs opacity-70 leading-normal">
+                Build a consistent habit of opening the Quran daily with streak bonuses and milestone celebrations.
+              </p>
+            </div>
+
+            <div className={`p-4 rounded-2xl border ${themeClasses.cardBg} space-y-1.5`}>
+              <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center text-sm font-bold">
+                ☁️
+              </div>
+              <h3 className="font-display font-bold text-sm">Cloud Saved & Synced</h3>
+              <p className="text-xs opacity-70 leading-normal">
+                Sign in to keep your ranks, streaks, and circle progress safely backed up across all your devices.
+              </p>
+            </div>
+          </div>
+
+          {/* Sign Up / Action Call to Action Card */}
+          <div className={`p-5 sm:p-7 rounded-3xl border-2 shadow-sm ${themeClasses.cardBg} space-y-4`}>
+            
+            {/* If not signed in with Google */}
+            {(!currentUser || currentUser.isAnonymous) && (
+              <div className="space-y-3">
+                <div className="text-center space-y-1">
+                  <h3 className="font-display font-extrabold text-base sm:text-lg">
+                    Sign in to Start or Join Leagues
+                  </h3>
+                  <p className="text-xs opacity-70">
+                    One tap to sync with Google and keep your study circle progress forever.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    onSignInGoogle?.();
+                  }}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-white hover:bg-stone-50 text-stone-900 border-2 border-stone-200 hover:border-stone-300 font-bold text-xs sm:text-sm shadow-xs transition-all flex items-center justify-center gap-3 cursor-pointer active:scale-98"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                  <span>Continue with Google</span>
+                </button>
+
+                <div className="flex items-center gap-3 pt-1">
+                  <div className="h-[1px] bg-black/10 dark:bg-white/10 flex-1" />
+                  <span className="text-[11px] opacity-50 uppercase font-mono font-bold tracking-wider">or try as guest</span>
+                  <div className="h-[1px] bg-black/10 dark:bg-white/10 flex-1" />
+                </div>
+              </div>
+            )}
+
+            {/* Direct Circle Actions */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setIsJoinOpen(true);
+                }}
+                className="w-full py-3 px-4 rounded-xl border border-black/15 dark:border-white/20 hover:bg-black/5 dark:hover:bg-white/5 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98"
+              >
+                <KeyRound className="w-4 h-4 text-[#519CAB]" />
+                <span>Join with Invite Code</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  triggerHaptic('medium');
+                  setIsCreateOpen(true);
+                }}
+                className={`w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer active:scale-98 ${themeClasses.accentBg}`}
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create a Study Circle</span>
+              </button>
+            </div>
+
+            {/* Privacy Promise */}
+            <p className="text-[11px] text-center opacity-60 pt-1">
+              Circles are private and invite-only. We never share your data.
+            </p>
+
+          </div>
+
+          {/* Quick Point Rules Bar */}
+          <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/10 flex flex-wrap items-center justify-around gap-3 text-center text-xs">
+            <div>
+              <span className="font-mono font-bold text-amber-600 dark:text-amber-400 block">+10 XP</span>
+              <span className="text-[10px] opacity-60">Ayah Blank</span>
+            </div>
+            <div className="h-4 w-[1px] bg-black/10 dark:bg-white/10 hidden sm:block" />
+            <div>
+              <span className="font-mono font-bold text-amber-600 dark:text-amber-400 block">+50 XP</span>
+              <span className="text-[10px] opacity-60">Page Complete</span>
+            </div>
+            <div className="h-4 w-[1px] bg-black/10 dark:bg-white/10 hidden sm:block" />
+            <div>
+              <span className="font-mono font-bold text-amber-600 dark:text-amber-400 block">+100 XP</span>
+              <span className="text-[10px] opacity-60">Daily Target Met</span>
+            </div>
+            <div className="h-4 w-[1px] bg-black/10 dark:bg-white/10 hidden sm:block" />
+            <div>
+              <span className="font-mono font-bold text-amber-600 dark:text-amber-400 block">+20 XP/d</span>
+              <span className="text-[10px] opacity-60">Streak Bonus</span>
+            </div>
+          </div>
+
+        </main>
+
+        {/* Modals so user can Join or Create directly from the landing page */}
+        <CreateLeagueModal
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+          onCreateLeague={onCreateLeague}
+          theme={theme}
+        />
+
+        <JoinLeagueModal
+          isOpen={isJoinOpen}
+          onClose={() => setIsJoinOpen(false)}
+          onJoinCode={onJoinCode}
+          availableLeagues={leagues}
+          theme={theme}
+        />
+
+      </div>
+    );
+  }
+
+  const activeLeague = leagues.find(l => l.id === activeLeagueId) || leagues[0];
+  const currentUserMember = activeLeague?.members.find(m => m.isCurrentUser);
   const userTier = currentUserMember ? getTierFromRank(currentUserMember.rank, activeLeague.members.length) : null;
 
   return (
@@ -311,6 +534,21 @@ export const LeagueDashboard: React.FC<LeagueDashboardProps> = ({
               <Plus className="w-3.5 h-3.5" />
               <span>Create Circle</span>
             </button>
+            {currentUser?.isAnonymous && onSignInGoogle && (
+              <>
+                <span className="opacity-20">•</span>
+                <button
+                  onClick={() => {
+                    triggerHaptic('light');
+                    onSignInGoogle();
+                  }}
+                  className="font-bold opacity-70 hover:opacity-100 flex items-center gap-1.5 py-2 px-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer text-[#519CAB]"
+                  title="Sync your league progress with Google"
+                >
+                  <span>Sync with Google</span>
+                </button>
+              </>
+            )}
           </div>
 
         </main>
