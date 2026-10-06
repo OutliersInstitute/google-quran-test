@@ -125,26 +125,26 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
     let timer: NodeJS.Timeout | null = null;
 
     if (isPageAllCompleted && autoAdvance && !isCountdownPaused) {
-      setCountdown(3);
-      timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev === null) return null;
-          if (prev <= 1) {
-            clearInterval(timer!);
-            onNextPage();
-            return null;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else if (!isPageAllCompleted) {
-      setCountdown(null);
+      if (countdown === null) {
+        setCountdown(3);
+      } else if (countdown > 0) {
+        timer = setTimeout(() => {
+          setCountdown(countdown - 1);
+        }, 1000);
+      } else if (countdown === 0) {
+        setCountdown(null);
+        onNextPage();
+      }
+    } else {
+      if (countdown !== null) {
+        setCountdown(null);
+      }
     }
 
     return () => {
-      if (timer) clearInterval(timer);
+      if (timer) clearTimeout(timer);
     };
-  }, [isPageAllCompleted, autoAdvance, isCountdownPaused, onNextPage]);
+  }, [isPageAllCompleted, autoAdvance, isCountdownPaused, countdown, onNextPage]);
 
   // Haptic feedback on completing all blanks on mobile
   useEffect(() => {
@@ -425,7 +425,14 @@ export const MobileBottomCarousel: React.FC<MobileBottomCarouselProps> = ({
         <div className={`flex items-center justify-between px-3 py-0.5 text-[10px] font-sans font-bold ${t.contextBar}`}>
           <div className="flex items-center gap-1.5 truncate">
             <span className="w-1.5 h-1.5 rounded-full bg-red-600 flex-shrink-0" />
-            <span>Blank ({activeBlankIndex + 1}/{totalBlanks})</span>
+            {activeTarget.pacingCheckpoint ? (
+              <span className="flex items-center gap-1 font-bold">
+                <span>⚡ Checkpoint {activeTarget.pacingCheckpoint.current}/{activeTarget.pacingCheckpoint.total}</span>
+                <span className="opacity-70">({activeTarget.pacingCheckpoint.zone})</span>
+              </span>
+            ) : (
+              <span>Blank ({activeBlankIndex + 1}/{totalBlanks})</span>
+            )}
             {activeTarget.subAyahPart && (
               <span className={`text-[9px] font-bold ${t.blankActive} px-1.5 py-0.2 rounded-md flex-shrink-0`}>
                 Part {activeTarget.subAyahPart.partIndex}/{activeTarget.subAyahPart.totalParts} ({activeTarget.subAyahPart.label})

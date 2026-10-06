@@ -91,6 +91,8 @@ export type PageRenderMode = 'authentic-image' | 'digital-text';
 
 export type PageViewMode = 'single' | 'double';
 
+export type BlankCountChoice = number | 'all' | 'paced';
+
 export interface BlankTarget {
   id: string;
   blankIndex?: number; // 1, 2, 3...
@@ -102,6 +104,11 @@ export interface BlankTarget {
     partIndex: number;
     totalParts: number;
     label?: string; // e.g. "Beginning", "Middle Clause", "Conclusion", "First Half", "Second Half"
+  };
+  pacingCheckpoint?: {
+    current: number;
+    total: number;
+    zone: 'Opening' | 'Middle' | 'Conclusion' | string;
   };
   hiddenType: 'full' | 'portion';
   portionSection?: 'start' | 'middle' | 'end';

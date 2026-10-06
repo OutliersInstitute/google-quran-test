@@ -1229,7 +1229,7 @@ function generateTrickyDistractors(
 export function createPageBlankTargets(
   pageAyahs: Ayah[],
   primarySurah: Surah,
-  requestedCount: number | 'all' = 1,
+  requestedCount: number | 'all' | 'paced' = 'paced',
   challengeType: ChallengeType = 'full-ayah',
   difficulty: DifficultyLevel = 'medium',
   pageNumberOverride?: number,
@@ -1256,6 +1256,8 @@ export function createPageBlankTargets(
 
   // Calculate allocations per ayah (ayahIndex -> blankCount)
   const allocations = new Map<number, number>();
+  // Store intentional pacing metadata: ayahIdx -> { current: number; total: number; zone: string }
+  const pacingMetadata = new Map<number, { current: number; total: number; zone: string }>();
 
   if (requestedCount === 'all') {
     // In 'all' mode:
@@ -1263,6 +1265,73 @@ export function createPageBlankTargets(
     pageAyahs.forEach((_, idx) => {
       allocations.set(idx, ayahCapacities[idx].maxBlanks);
     });
+  } else if (requestedCount === 'paced') {
+    // PACED MODE (Adaptive, intentional cognitive pacing):
+    // Randomly determines an approachable checkpoint count (between 2, 3, or 4) based on page density
+    // to avoid cognitive fatigue and overwhelm, while intentionally spacing checkpoints across the page.
+    pageAyahs.forEach((_, idx) => allocations.set(idx, 0));
+    const totalAyahs = pageAyahs.length;
+
+    let targetCount = 3;
+    if (totalAyahs <= 2) {
+      targetCount = totalAyahs;
+    } else if (totalAyahs <= 4) {
+      targetCount = Math.min(totalAyahs, Math.floor(Math.random() * 2) + 2); // 2 or 3
+    } else {
+      // Intentionally pick 2, 3, or 4 checkpoints (average 3)
+      targetCount = Math.floor(Math.random() * 3) + 2;
+    }
+
+    // Define spatial pacing zones across the page
+    const zones: { name: string; start: number; end: number }[] = [];
+    if (targetCount === 1) {
+      zones.push({ name: 'Key Checkpoint', start: 0, end: totalAyahs - 1 });
+    } else if (targetCount === 2) {
+      const mid = Math.floor(totalAyahs / 2);
+      zones.push({ name: 'Opening Section', start: 0, end: mid });
+      zones.push({ name: 'Conclusion Section', start: Math.min(totalAyahs - 1, mid + 1), end: totalAyahs - 1 });
+    } else if (targetCount === 3) {
+      const step = Math.floor(totalAyahs / 3);
+      zones.push({ name: 'Opening Section', start: 0, end: Math.max(0, step) });
+      zones.push({ name: 'Middle Narrative', start: Math.min(totalAyahs - 1, step + 1), end: Math.min(totalAyahs - 1, 2 * step) });
+      zones.push({ name: 'Conclusion Section', start: Math.min(totalAyahs - 1, 2 * step + 1), end: totalAyahs - 1 });
+    } else {
+      // 4 checkpoints
+      const step = Math.floor(totalAyahs / 4);
+      zones.push({ name: 'Opening Section', start: 0, end: Math.max(0, step) });
+      zones.push({ name: 'Upper-Middle', start: Math.min(totalAyahs - 1, step + 1), end: Math.min(totalAyahs - 1, 2 * step) });
+      zones.push({ name: 'Lower-Middle', start: Math.min(totalAyahs - 1, 2 * step + 1), end: Math.min(totalAyahs - 1, 3 * step) });
+      zones.push({ name: 'Conclusion Section', start: Math.min(totalAyahs - 1, 3 * step + 1), end: totalAyahs - 1 });
+    }
+
+    let checkpointIdx = 1;
+    zones.forEach((zone) => {
+      const candidates: number[] = [];
+      for (let i = zone.start; i <= zone.end; i++) {
+        if (i < totalAyahs) candidates.push(i);
+      }
+
+      if (candidates.length > 0) {
+        // Prioritize substantial verses with >= 5 words for rich context before and after
+        const substantial = candidates.filter(i => (ayahCapacities[i]?.N || 0) >= 5);
+        const pool = substantial.length > 0 ? substantial : candidates;
+        const chosenAyahIdx = pool[Math.floor(Math.random() * pool.length)];
+
+        allocations.set(chosenAyahIdx, 1);
+        pacingMetadata.set(chosenAyahIdx, {
+          current: checkpointIdx,
+          total: zones.length,
+          zone: zone.name,
+        });
+        checkpointIdx++;
+      }
+    });
+
+    // Safety fallback: ensure at least one checkpoint is assigned
+    if (checkpointIdx === 1 && totalAyahs > 0) {
+      allocations.set(0, 1);
+      pacingMetadata.set(0, { current: 1, total: 1, zone: 'Opening Section' });
+    }
   } else {
     const targetTotal = Math.max(1, typeof requestedCount === 'number' ? requestedCount : 1);
     pageAyahs.forEach((_, idx) => allocations.set(idx, 0));
@@ -1569,6 +1638,8 @@ export function createPageBlankTargets(
         ? `blank_p${targetPageNum}_a${targetAyah.number}_sub${def.partIndex}_${globalBlankIndex}_${Date.now()}`
         : `blank_p${targetPageNum}_a${targetAyah.number}_${globalBlankIndex}_${Date.now()}`;
 
+      const paceMeta = pacingMetadata.get(ayahIdx);
+
       results.push({
         id: targetId,
         blankIndex: globalBlankIndex,
@@ -1580,6 +1651,11 @@ export function createPageBlankTargets(
           partIndex: def.partIndex,
           totalParts: def.totalParts,
           label: def.label
+        } : undefined,
+        pacingCheckpoint: paceMeta ? {
+          current: paceMeta.current,
+          total: paceMeta.total,
+          zone: paceMeta.zone
         } : undefined,
         hiddenType: def.hiddenType,
         portionSection: def.portionSection,

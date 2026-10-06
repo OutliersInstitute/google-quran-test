@@ -8,7 +8,7 @@ import {
   BlankTarget, CarouselOption, ChallengeType, DifficultyLevel, GameStats, 
   MushafTheme, QuranPageData, Surah, Ayah, PageRangeConfig, RangeSessionStats, 
   PageViewMode, PageRenderMode, PageMarginConfig, DailyTargetConfig, DailyProgressData, GoalProgressSummary,
-  AppView, DailyHistoryRecord, League, XpEventNotification 
+  AppView, DailyHistoryRecord, League, XpEventNotification, BlankCountChoice 
 } from './types';
 import { BUILT_IN_SURAHS } from './data/quranData';
 import { fetchPage } from './services/quranApi';
@@ -231,11 +231,12 @@ export default function App() {
     };
   }, []);
 
-  // Blank count choice: 1, 2, 3, 5, 'all'
-  const [blankCountChoice, setBlankCountChoice] = useState<number | 'all'>(() => {
+  // Blank count choice: 'paced' (adaptive intentional pacing), 1, 2, 3, 5, 'all'
+  const [blankCountChoice, setBlankCountChoice] = useState<BlankCountChoice>(() => {
     try {
       const saved = localStorage.getItem(BLANK_COUNT_STORAGE_KEY);
       if (saved === 'all') return 'all';
+      if (saved === 'paced') return 'paced';
       if (saved) {
         const p = parseInt(saved, 10);
         if (!isNaN(p) && p >= 1) return p;
@@ -243,7 +244,7 @@ export default function App() {
     } catch {
       // fallback
     }
-    return 3;
+    return 'paced'; // Default to intentional adaptive pacing to prevent cognitive overwhelm
   });
 
   // Multiple blanks in long ayahs preference
@@ -498,7 +499,7 @@ export default function App() {
   const generateBlanksForPages = useCallback((
     rightData: QuranPageData,
     leftData: QuranPageData | null,
-    countPref: number | 'all',
+    countPref: BlankCountChoice,
     cType: ChallengeType,
     diff: DifficultyLevel,
     mobileOnlyPortion: boolean = isMobile,
@@ -509,8 +510,10 @@ export default function App() {
 
     if (leftData && leftData.ayahs.length > 0) {
       // In double page mode, distribute blanks cleanly across both facing pages
-      const countPerSide = countPref === 'all' 
+      const countPerSide: BlankCountChoice = countPref === 'all' 
         ? 'all' 
+        : countPref === 'paced'
+        ? 'paced'
         : Math.max(1, Math.ceil((typeof countPref === 'number' ? countPref : 2) / 2));
       
       const rightCount = countPerSide;
@@ -715,20 +718,18 @@ export default function App() {
   // Toggle allowing multiple blanks per long ayah
   const handleToggleMultiBlanksPerAyah = () => {
     triggerHaptic('light');
-    setAllowMultiBlanksPerAyah(prev => {
-      const next = !prev;
-      try {
-        localStorage.setItem(MULTI_BLANKS_STORAGE_KEY, String(next));
-      } catch {
-        // ignore
-      }
-      if (currentPageData && currentPageData.ayahs.length > 0) {
-        const targets = generateBlanksForPages(currentPageData, secondaryPageData, blankCountChoice, challengeType, difficulty, isMobile, next);
-        setBlankTargets(targets);
-        setActiveBlankIndex(0);
-      }
-      return next;
-    });
+    const next = !allowMultiBlanksPerAyah;
+    setAllowMultiBlanksPerAyah(next);
+    try {
+      localStorage.setItem(MULTI_BLANKS_STORAGE_KEY, String(next));
+    } catch {
+      // ignore
+    }
+    if (currentPageData && currentPageData.ayahs.length > 0) {
+      const targets = generateBlanksForPages(currentPageData, secondaryPageData, blankCountChoice, challengeType, difficulty, isMobile, next);
+      setBlankTargets(targets);
+      setActiveBlankIndex(0);
+    }
   };
 
   // Generate fresh random blanks on current page / spread

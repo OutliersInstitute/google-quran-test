@@ -5,7 +5,7 @@ import {
   Zap, Palette, ShieldAlert, Award, Compass, FileText, Smartphone, Maximize2, Target, Home, Trophy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChallengeType, DifficultyLevel, MushafTheme, PageViewMode, PageRenderMode, Surah, PageRangeConfig, PageMarginConfig, PageMarginPreset, DailyTargetConfig, GoalProgressSummary } from '../types';
+import { ChallengeType, DifficultyLevel, MushafTheme, PageViewMode, PageRenderMode, Surah, PageRangeConfig, PageMarginConfig, PageMarginPreset, DailyTargetConfig, GoalProgressSummary, BlankCountChoice } from '../types';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -26,8 +26,8 @@ interface SettingsModalProps {
   onChangePageViewMode: (mode: PageViewMode) => void;
   isMobile?: boolean;
   // Blanks count per page
-  blankCountChoice: number | 'all';
-  onChangeBlankCountChoice: (count: number | 'all') => void;
+  blankCountChoice: BlankCountChoice;
+  onChangeBlankCountChoice: (count: BlankCountChoice) => void;
   // Audio & Translation & Haptics
   autoPlayAudio: boolean;
   onToggleAutoPlayAudio: () => void;
@@ -738,12 +738,47 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="flex items-center justify-between">
                   <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 font-display ${st.sectionLabel}`}>
                     <Layers className={`w-3.5 h-3.5 ${st.sectionIcon}`} />
-                    Blanks Per Page
+                    Blanks Per Page & Pacing
                   </label>
                   <span className="text-[11px] text-stone-500 dark:text-stone-400">
-                    {blankCountChoice === 'all' ? 'All ayahs masked' : `${blankCountChoice} verse(s) per page`}
+                    {blankCountChoice === 'paced' ? 'Adaptive 2–4 checkpoints' : blankCountChoice === 'all' ? 'All ayahs masked' : `${blankCountChoice} verse(s) per page`}
                   </span>
                 </div>
+
+                {/* Intentional Paced Mode Card (Recommended) */}
+                <button
+                  type="button"
+                  id="settings-blanks-paced-card"
+                  onClick={() => onChangeBlankCountChoice('paced')}
+                  className={`w-full p-3 rounded-2xl border-2 mb-2 transition-all text-left flex items-start justify-between gap-3 cursor-pointer ${
+                    blankCountChoice === 'paced' ? st.cardSelected : st.cardDefault
+                  }`}
+                >
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs flex items-center gap-1">
+                        <span>⚡</span>
+                        <span>Paced Mode (Recommended)</span>
+                      </span>
+                      <span className="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                        Adaptive 2–4 Checkpoints
+                      </span>
+                    </div>
+                    <p className="text-[11px] opacity-75 leading-relaxed">
+                      Randomly selects 2 to 4 checkpoints distributed across the beginning, middle narrative, and conclusion of the page to avoid overwhelm and maintain intentional retention pacing.
+                    </p>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                    blankCountChoice === 'paced' ? 'border-[#519CAB] bg-[#519CAB] text-white' : 'border-stone-300'
+                  }`}>
+                    {blankCountChoice === 'paced' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
+                </button>
+
+                <div className="text-[10px] uppercase font-bold opacity-60 mb-1 px-1">
+                  Or choose a fixed count:
+                </div>
+
                 <div className="grid grid-cols-6 gap-1.5">
                   {[1, 2, 3, 4, 5, 'all'].map((opt) => {
                     const isSelected = blankCountChoice === opt;

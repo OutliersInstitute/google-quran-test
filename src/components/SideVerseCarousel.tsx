@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BlankTarget, CarouselOption, ChallengeType, DifficultyLevel, Surah, PageRangeConfig, PageViewMode, MushafTheme } from '../types';
+import { BlankTarget, CarouselOption, ChallengeType, DifficultyLevel, Surah, PageRangeConfig, PageViewMode, MushafTheme, BlankCountChoice } from '../types';
 import { 
   Sparkles, CheckCircle2, XCircle, Volume2, VolumeX, ArrowRight, 
   Shuffle, Eye, EyeOff, BookOpen, Flame, Award, ChevronLeft, ChevronRight, RotateCcw,
@@ -14,8 +14,8 @@ interface SideVerseCarouselProps {
   blankTargets: BlankTarget[];
   activeBlankIndex: number;
   onSelectBlankIndex: (index: number) => void;
-  blankCountChoice: number | 'all';
-  onChangeBlankCountChoice: (count: number | 'all') => void;
+  blankCountChoice: BlankCountChoice;
+  onChangeBlankCountChoice: (count: BlankCountChoice) => void;
   selectedOption: CarouselOption | null;
   isAnswered: boolean;
   isCorrect: boolean;
@@ -119,26 +119,26 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
     let timer: NodeJS.Timeout | null = null;
 
     if (isPageAllCompleted && autoAdvance && !isCountdownPaused) {
-      setCountdown(3);
-      timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev === null) return null;
-          if (prev <= 1) {
-            if (timer) clearInterval(timer);
-            onNextPage();
-            return null;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      if (countdown === null) {
+        setCountdown(3);
+      } else if (countdown > 0) {
+        timer = setTimeout(() => {
+          setCountdown(countdown - 1);
+        }, 1000);
+      } else if (countdown === 0) {
+        setCountdown(null);
+        onNextPage();
+      }
     } else {
-      setCountdown(null);
+      if (countdown !== null) {
+        setCountdown(null);
+      }
     }
 
     return () => {
-      if (timer) clearInterval(timer);
+      if (timer) clearTimeout(timer);
     };
-  }, [isPageAllCompleted, autoAdvance, isCountdownPaused, onNextPage, currentPageNumber]);
+  }, [isPageAllCompleted, autoAdvance, isCountdownPaused, countdown, onNextPage]);
 
   // Haptic feedback on completing all blanks on the page
   useEffect(() => {
@@ -582,21 +582,29 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
           </div>
 
           <div className="flex items-center gap-1 bg-amber-900/10 dark:bg-amber-950/40 p-0.5 rounded-lg">
-            {([1, 2, 3, 5, 'all'] as const).map((cnt) => {
+            {(['paced', 1, 2, 3, 'all'] as const).map((cnt) => {
               const isSelected = blankCountChoice === cnt;
               return (
                 <button
                   key={`cnt_${cnt}`}
                   id={`blank-count-btn-${cnt}`}
                   onClick={() => onChangeBlankCountChoice(cnt)}
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer flex items-center gap-0.5 ${
                     isSelected
-                      ? 'bg-amber-800 text-white shadow-xs'
+                      ? cnt === 'paced'
+                        ? 'bg-amber-700 text-white shadow-xs'
+                        : 'bg-amber-800 text-white shadow-xs'
                       : 'text-amber-950 dark:text-amber-200 hover:bg-amber-800/20'
                   }`}
-                  title={cnt === 'all' ? 'Hide every ayah on this page as blanks' : `Set ${cnt} blanks on this page`}
+                  title={
+                    cnt === 'paced'
+                      ? 'Paced Mode: 2-4 checkpoints spaced intentionally across the page to avoid overwhelm'
+                      : cnt === 'all'
+                      ? 'Hide every ayah on this page as blanks'
+                      : `Set ${cnt} blanks on this page`
+                  }
                 >
-                  {cnt === 'all' ? 'All' : cnt}
+                  {cnt === 'paced' ? '⚡ Paced' : cnt === 'all' ? 'All' : cnt}
                 </button>
               );
             })}
@@ -607,7 +615,7 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
         {totalBlanks > 1 && (
           <div className="flex items-center gap-1.5 pt-1 overflow-x-auto no-scrollbar" id="multi-blank-tabs">
             <span className="text-[10px] font-bold opacity-60 flex-shrink-0">
-              Blanks ({answeredCount}/{totalBlanks}):
+              {blankCountChoice === 'paced' ? 'Checkpoints' : 'Blanks'} ({answeredCount}/{totalBlanks}):
             </span>
             <div className="flex items-center gap-1 flex-1">
               {blankTargets.map((target, idx) => {
@@ -761,6 +769,12 @@ export const SideVerseCarousel: React.FC<SideVerseCarouselProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 flex-wrap">
+                  {activeTarget?.pacingCheckpoint && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/30 flex items-center gap-1">
+                      <span>⚡ {activeTarget.pacingCheckpoint.zone}</span>
+                      <span className="opacity-70 font-mono">({activeTarget.pacingCheckpoint.current}/{activeTarget.pacingCheckpoint.total})</span>
+                    </span>
+                  )}
                   {difficulty === 'hafiz' && (
                     <span className="text-[9px] font-bold text-red-900 dark:text-red-300 bg-red-100 dark:bg-red-950/60 px-1.5 py-0.5 rounded border border-red-300/60 dark:border-red-800">
                       Hafiz Mutashabihat
